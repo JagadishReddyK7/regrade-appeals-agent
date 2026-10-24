@@ -6,7 +6,7 @@ claims and checks every claim against evidence: it runs the student's code and r
 the rubric, course announcements and precedents. It proposes a grade change only when the
 evidence supports one, and escalates unclear cases to a TA.
 
-The full specification is in `docs/attention_seekers_final_proposal.pdf`.
+The full specification is in `docs/proposal.pdf`.
 
 ## Layout
 

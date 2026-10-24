@@ -1,0 +1,41 @@
+# Private evaluation cases: never commit
+data/cases/test/
+
+# Secrets
+.env
+.env.*
+kaggle.json
+
+# Model weights and checkpoints
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.gguf
+*.ckpt
+checkpoints/
+adapters/
+models/
+
+# Caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.cache/
+sandbox/cache/
+
+# Kaggle and run outputs
+outputs/
+runs/
+logs/
+/kaggle/
+.ipynb_checkpoints/
+
+# Python packaging and environments
+*.egg-info/
+build/
+dist/
+.venv/
+venv/

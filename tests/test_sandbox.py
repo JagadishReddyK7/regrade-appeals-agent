@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 
+import sandbox.runner
 from sandbox.cache import ResultCache
 from sandbox.runner import Limits, SandboxRunner
 
@@ -159,6 +160,25 @@ def test_results_are_cached(tmp_path: Path, tests_file: Path) -> None:
     runner._execute = None  # type: ignore[assignment]  # any real run would now fail
     second = run_add(runner, tmp_path, tests_file, "    return a + b")
     assert second == first
+
+
+def test_wall_clock_timeout_is_not_cached(tmp_path: Path, tests_file: Path) -> None:
+    cache_dir = tmp_path / "cache"
+    runner = SandboxRunner(cache=ResultCache(cache_dir), limits=Limits(wall_seconds=1.0))
+    body = "    import time\n    time.sleep(30)"
+    assert run_add(runner, tmp_path, tests_file, body).error_type == "timeout"
+    assert list(cache_dir.glob("*.json")) == []
+
+
+def test_cache_key_depends_on_harness(
+    tmp_path: Path, tests_file: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    cache_dir = tmp_path / "cache"
+    runner = SandboxRunner(cache=ResultCache(cache_dir), limits=FAST_LIMITS)
+    run_add(runner, tmp_path, tests_file, "    return a + b")
+    monkeypatch.setattr(sandbox.runner, "HARNESS_HASH", "changed")
+    run_add(runner, tmp_path, tests_file, "    return a + b")
+    assert len(list(cache_dir.glob("*.json"))) == 2
 
 
 def test_cache_key_depends_on_submission(tmp_path: Path, tests_file: Path) -> None:

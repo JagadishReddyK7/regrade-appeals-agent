@@ -35,6 +35,7 @@ from sandbox.result import ErrorType, RunResult
 REPORTED_STATUSES = {"test_failed", "exception", "memory_limit", "network_blocked"}
 
 HARNESS = Path(__file__).with_name("harness.py")
+HARNESS_HASH = sha256_bytes(HARNESS.read_bytes())  # cached results expire when it changes
 IS_POSIX = os.name == "posix"
 CUSTOM_TEST_ID = "<custom>"
 TRUNCATION_NOTE = "\n[output truncated]"
@@ -96,7 +97,7 @@ class SandboxRunner:
 
     def _input_hash(self, data: bytes) -> str:
         limits = json.dumps(asdict(self.limits), sort_keys=True).encode()
-        return sha256_bytes(data + b"\0" + limits)
+        return sha256_bytes(b"\0".join((data, limits, HARNESS_HASH.encode())))
 
     def _cached_run(
         self,
@@ -113,7 +114,9 @@ class SandboxRunner:
             return hit
         outcome = self._execute(files, config, driver, stdin)
         result = to_result(outcome, None if test_id == CUSTOM_TEST_ID else test_id)
-        if self.cache is not None:
+        # A wall-clock timeout can come from a busy machine (e.g. vLLM sharing the CPU), so
+        # it is not cached; CPU-time limits measure the code itself and are cached.
+        if self.cache is not None and not outcome.timed_out:
             self.cache.put(key, result)
         return result
 

@@ -1,0 +1,17 @@
+name: b1_dev
+system: b1
+cases: data/cases/dev
+data_root: data
+output_dir: runs
+seed: 0
+temperature: 0.0
+followup: true          # B1 only for now; the agent has no follow-up turn yet
+llm:
+  backend: openai       # an OpenAI-compatible server, e.g. vLLM on Kaggle
+  base_url: http://localhost:8000/v1
+  model: Qwen/Qwen2.5-7B-Instruct-AWQ
+  timeout_s: 120
+agent:
+  max_tool_calls: 10
+sandbox:
+  cache_dir: sandbox/cache

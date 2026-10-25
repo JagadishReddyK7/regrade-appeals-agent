@@ -163,3 +163,56 @@ class Decision(StrictModel):
         if len(ids) != len(set(ids)):
             raise ValueError(f"duplicate claim ids in verdicts: {ids}")
         return self
+
+
+# --- Tool-call arguments ----------------------------------------------------------------
+
+
+class NoArgs(StrictModel):
+    pass
+
+
+class RunTestsArgs(StrictModel):
+    test_ids: list[str] | None = None  # None runs every test
+
+
+class RunCodeArgs(StrictModel):
+    code: str = NonEmptyStr  # driver script; it may import the student's module
+    stdin: str = ""
+
+
+class SearchArgs(StrictModel):
+    query: str = NonEmptyStr
+    k: int = Field(default=3, ge=1, le=10)
+
+
+class ProposeGradeChangeArgs(StrictModel):
+    item_id: str = NonEmptyStr  # rubric item, test id or policy
+    delta: float = Field(gt=0)
+    reason: str = NonEmptyStr
+
+
+class EscalateArgs(StrictModel):
+    reason: str = NonEmptyStr
+
+
+class SubmitDecisionArgs(StrictModel):
+    outcome: Outcome
+    delta: float = Field(ge=0)
+    rationale: str = NonEmptyStr
+    confidence: float = Field(ge=0, le=1)
+    evidence_ids: list[str] = Field(default_factory=list)
+
+
+# --- Baseline outputs -------------------------------------------------------------------
+
+
+class DirectDecisionOutput(StrictModel):
+    """Structured output of baseline B1 (no tools). Evidence ids name the documents in
+    its prompt, e.g. "submission", "grade_report", "spec", "rubric" or an announcement."""
+
+    outcome: Outcome
+    delta: float = Field(ge=0)
+    rationale: str = NonEmptyStr
+    confidence: float = Field(ge=0, le=1)
+    evidence_ids: list[str] = Field(min_length=1)

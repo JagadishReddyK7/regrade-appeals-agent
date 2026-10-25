@@ -1,0 +1,45 @@
+id: D1
+title: String utilities
+module: strings_utils.py
+tests_file: test_strings_utils.py
+reference_autograder: standard
+autograders:
+  standard: autograder/standard
+  faulty_empty: autograder/faulty_empty  # planted: test_empty_string expects None
+rubric:
+  - id: test_count_vowels_basic
+    kind: test
+    marks: 4
+    description: count_vowels counts lowercase vowels
+  - id: test_count_vowels_uppercase
+    kind: test
+    marks: 4
+    description: count_vowels ignores case
+  - id: test_empty_string
+    kind: test
+    marks: 5
+    description: count_vowels returns 0 for an empty string
+  - id: test_reverse_words_basic
+    kind: test
+    marks: 4
+    description: reverse_words reverses word order
+  - id: test_reverse_words_extra_spaces
+    kind: test
+    marks: 4
+    description: reverse_words collapses extra whitespace
+  - id: test_reverse_words_single
+    kind: test
+    marks: 4
+    description: reverse_words leaves a single word unchanged
+  - id: "rubric:style"
+    kind: manual
+    marks: 2
+    description: Every function has a docstring
+  - id: "rubric:approach"
+    kind: manual
+    marks: 3
+    description: Follows the approach rules in the specification and announcements
+policies:
+  - id: "policy:late_penalty"
+    marks: 10
+    description: Late submissions lose 10 marks; extensions are decided by course staff

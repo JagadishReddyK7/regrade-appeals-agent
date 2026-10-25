@@ -1,0 +1,19 @@
+{
+  "assignment": "D1",
+  "submission": "D1-S05",
+  "autograder": "standard",
+  "tests": {
+    "test_count_vowels_basic": true,
+    "test_count_vowels_uppercase": false,
+    "test_empty_string": true,
+    "test_reverse_words_basic": true,
+    "test_reverse_words_extra_spaces": true,
+    "test_reverse_words_single": true
+  },
+  "manual": {
+    "rubric:style": {"awarded": 2, "comment": ""},
+    "rubric:approach": {"awarded": 3, "comment": ""}
+  },
+  "penalties": {},
+  "total": 26
+}

@@ -6,7 +6,8 @@ import pytest
 from data.validate import main, validate_folder
 from tests.test_schemas import make_case
 
-DEV_DIR = Path(__file__).resolve().parents[1] / "data" / "cases" / "dev"
+DATA_ROOT = Path(__file__).resolve().parents[1] / "data"
+DEV_DIR = DATA_ROOT / "cases" / "dev"
 
 
 def write_case(folder: Path, name: str, case: dict) -> Path:
@@ -16,9 +17,15 @@ def write_case(folder: Path, name: str, case: dict) -> Path:
 
 
 def test_dev_examples_are_valid() -> None:
-    results = validate_folder(DEV_DIR)
-    assert len(results) >= 3
+    results = validate_folder(DEV_DIR, data_root=DATA_ROOT)
+    assert len(results) >= 4
     assert all(not errors for errors in results.values()), results
+
+
+def test_cross_check_reports_missing_data(tmp_path: Path) -> None:
+    path = write_case(tmp_path, "a.json", make_case())  # refers to D1-S01, which does not exist
+    results = validate_folder(tmp_path, data_root=DATA_ROOT)
+    assert any("cannot load referenced data" in e for e in results[path])
 
 
 def test_invalid_file_reported(tmp_path: Path) -> None:
@@ -49,9 +56,10 @@ def test_split_must_match_folder(tmp_path: Path) -> None:
 
 
 def test_main_exit_codes(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
-    assert main([str(DEV_DIR)]) == 0
+    assert main([str(DEV_DIR), "--data-root", str(DATA_ROOT)]) == 0
     write_case(tmp_path, "bad.json", make_case(tone="sarcastic"))
-    assert main([str(tmp_path)]) == 1
+    assert main([str(tmp_path), "--schema-only"]) == 1
     assert "INVALID" in capsys.readouterr().out
-    assert main([]) == 2
     assert main([str(tmp_path / "missing")]) == 2
+    with pytest.raises(SystemExit):
+        main([])

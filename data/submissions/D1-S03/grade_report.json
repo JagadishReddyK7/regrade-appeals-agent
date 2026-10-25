@@ -1,0 +1,19 @@
+{
+  "assignment": "D1",
+  "submission": "D1-S03",
+  "autograder": "faulty_empty",
+  "tests": {
+    "test_count_vowels_basic": true,
+    "test_count_vowels_uppercase": true,
+    "test_empty_string": false,
+    "test_reverse_words_basic": true,
+    "test_reverse_words_extra_spaces": true,
+    "test_reverse_words_single": true
+  },
+  "manual": {
+    "rubric:style": {"awarded": 0, "comment": "No docstrings."},
+    "rubric:approach": {"awarded": 3, "comment": ""}
+  },
+  "penalties": {},
+  "total": 23
+}

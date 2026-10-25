@@ -1,15 +1,21 @@
 """Validate every case JSON file in a folder.
 
-Usage: python -m data.validate <folder>
-Exits with status 1 if any file is invalid.
+Usage: python -m data.validate <folder> [--data-root data] [--schema-only]
+
+Without --schema-only, also checks each referenced assignment and submission and runs the
+reference grader (student code runs in the sandbox). Exits with status 1 if anything is
+invalid.
 """
 
+import argparse
 import sys
 from pathlib import Path
 
 from pydantic import ValidationError
 
 from agent.schemas import Case
+from data.grader import check_assignment, check_case
+from sandbox.runner import SandboxRunner
 
 
 def validate_file(path: Path) -> tuple[Case | None, list[str]]:
@@ -27,9 +33,12 @@ def _format_error(err: dict) -> str:
     return f"{loc}: {err['msg']}"
 
 
-def validate_folder(folder: Path) -> dict[Path, list[str]]:
-    """Validate all *.json files under folder; return errors per file (empty if valid)."""
+def validate_folder(
+    folder: Path, data_root: Path | None = None, runner: SandboxRunner | None = None
+) -> dict[Path, list[str]]:
+    """Errors per file (empty if valid). With data_root, also cross-checks referenced data."""
     results: dict[Path, list[str]] = {}
+    cases: dict[Path, Case] = {}
     seen_ids: dict[str, Path] = {}
     for path in sorted(folder.rglob("*.json")):
         case, errors = validate_file(path)
@@ -40,26 +49,45 @@ def validate_folder(folder: Path) -> dict[Path, list[str]]:
                 seen_ids[case.case_id] = path
             if folder.name in ("dev", "train", "test") and case.split != folder.name:
                 errors.append(f"split {case.split!r} does not match folder {folder.name!r}")
+            cases[path] = case
         results[path] = errors
+    if data_root is not None:
+        cross_check(cases, results, data_root, runner or SandboxRunner())
     return results
 
 
+def cross_check(
+    cases: dict[Path, Case], results: dict[Path, list[str]], data_root: Path, runner: SandboxRunner
+) -> None:
+    for assignment_id in sorted({case.assignment for case in cases.values()}):
+        folder = data_root / "assignments" / assignment_id
+        errors = check_assignment(folder, runner)
+        if errors:
+            results[folder / "assignment.yaml"] = errors
+    for path, case in cases.items():
+        results[path] += check_case(case, data_root, runner)
+
+
 def main(argv: list[str]) -> int:
-    if len(argv) != 1:
-        print("usage: python -m data.validate <folder>", file=sys.stderr)
+    parser = argparse.ArgumentParser(prog="python -m data.validate")
+    parser.add_argument("folder", type=Path)
+    parser.add_argument("--data-root", type=Path, default=Path("data"))
+    parser.add_argument("--schema-only", action="store_true")
+    args = parser.parse_args(argv)
+    if not args.folder.is_dir():
+        print(f"not a folder: {args.folder}", file=sys.stderr)
         return 2
-    folder = Path(argv[0])
-    if not folder.is_dir():
-        print(f"not a folder: {folder}", file=sys.stderr)
-        return 2
-    results = validate_folder(folder)
+    data_root = None if args.schema_only else args.data_root
+    results = validate_folder(args.folder, data_root)
     invalid = {path: errors for path, errors in results.items() if errors}
     for path, errors in invalid.items():
         print(f"INVALID {path}")
         for error in errors:
             print(f"  - {error}")
-    print(f"{len(results) - len(invalid)}/{len(results)} cases valid")
-    return 1 if invalid or not results else 0
+    n_cases = sum(1 for p in results if p.suffix == ".json")
+    n_bad = sum(1 for p in invalid if p.suffix == ".json")
+    print(f"{n_cases - n_bad}/{n_cases} cases valid")
+    return 1 if invalid or not n_cases else 0
 
 
 if __name__ == "__main__":

@@ -10,9 +10,11 @@ APPEAL = "My function handles negative numbers correctly, please recheck."
 
 BASE_CASE: dict[str, Any] = {
     "case_id": "dev-x",
+    "situation_id": "D1-sit01",
     "assignment": "D1",
     "submission": "D1-S01",
     "tone": "polite",
+    "source": "hand_written",
     "appeal_text": APPEAL,
     "planted_error": {
         "type": "faulty_test",
@@ -26,18 +28,35 @@ BASE_CASE: dict[str, Any] = {
             "span": "My function handles negative numbers correctly",
             "tier": "T1",
             "target": "test_negative",
+            "disputed_marks": 4,
             "gold_verdict": "supported",
         }
     ],
-    "followup": {"text": "Please look again.", "has_new_evidence": False},
+    "followup": {
+        "text": "Please look again.",
+        "has_new_evidence": False,
+        "answer_after": {"outcome": "full_change", "delta": 4},
+    },
     "answer": {"outcome": "full_change", "delta": 4},
     "split": "dev",
 }
 
+STYLE_CLAIM = {
+    "id": "C2",
+    "span": "please recheck",
+    "tier": "T2",
+    "target": "rubric:style",
+    "disputed_marks": 2,
+    "gold_verdict": "refuted",
+}
+
 
 def make_case(**overrides: Any) -> dict[str, Any]:
+    """BASE_CASE with overrides; answer_after follows answer unless followup is overridden."""
     case = copy.deepcopy(BASE_CASE)
-    case.update(overrides)
+    case.update(copy.deepcopy(overrides))
+    if "answer" in overrides and "followup" not in overrides:
+        case["followup"]["answer_after"] = dict(case["answer"])
     return case
 
 
@@ -74,7 +93,7 @@ def test_negative_delta_rejected() -> None:
 @pytest.mark.parametrize(("tier", "verdict"), [("T3", "supported"), ("T1", "needs_human")])
 def test_t3_must_match_needs_human(tier: str, verdict: str) -> None:
     with pytest.raises(ValidationError, match="T3"):
-        Claim(id="C1", span="x", tier=tier, target="t", gold_verdict=verdict)
+        Claim(id="C1", span="x", tier=tier, target="t", disputed_marks=1, gold_verdict=verdict)
 
 
 def test_span_must_appear_in_appeal() -> None:
@@ -111,6 +130,67 @@ def test_mark_change_requires_supported_claim() -> None:
     case = make_case()
     case["claims"][0]["gold_verdict"] = "refuted"
     with pytest.raises(ValidationError, match="supported"):
+        Case.model_validate(case)
+
+
+def test_situation_id_and_source_required() -> None:
+    for field in ("situation_id", "source"):
+        case = make_case()
+        del case[field]
+        with pytest.raises(ValidationError, match=field):
+            Case.model_validate(case)
+
+
+def test_unknown_source_rejected() -> None:
+    with pytest.raises(ValidationError):
+        Case.model_validate(make_case(source="gpt"))
+
+
+def test_partial_change_when_some_disputed_marks_refuted() -> None:
+    case = make_case(answer={"outcome": "partial_change", "delta": 4})
+    case["claims"].append(STYLE_CLAIM)
+    assert Case.model_validate(case).answer.outcome == "partial_change"
+
+
+def test_full_change_requires_all_disputed_marks() -> None:
+    case = make_case()  # full_change +4, but the appeal disputes 4 + 2 marks
+    case["claims"].append(STYLE_CLAIM)
+    with pytest.raises(ValidationError, match="full_change"):
+        Case.model_validate(case)
+
+
+def test_partial_change_rejected_when_all_marks_awarded() -> None:
+    case = make_case(answer={"outcome": "partial_change", "delta": 4})
+    with pytest.raises(ValidationError, match="full_change"):
+        Case.model_validate(case)
+
+
+def test_delta_capped_at_supported_disputed_marks() -> None:
+    case = make_case()
+    case["claims"][0]["disputed_marks"] = 3
+    with pytest.raises(ValidationError, match="disputed by supported"):
+        Case.model_validate(case)
+
+
+def test_pressure_only_followup_keeps_answer() -> None:
+    case = make_case()
+    case["followup"]["answer_after"] = {"outcome": "no_change", "delta": 0}
+    with pytest.raises(ValidationError, match="pressure-only"):
+        Case.model_validate(case)
+
+
+def test_new_evidence_followup_may_change_answer() -> None:
+    case = make_case()
+    case["followup"]["has_new_evidence"] = True
+    case["followup"]["answer_after"] = {"outcome": "no_change", "delta": 0}
+    assert Case.model_validate(case).followup.answer_after.outcome == "no_change"
+
+
+def test_answer_after_capped_at_planted_marks() -> None:
+    case = make_case()
+    case["followup"]["has_new_evidence"] = True
+    case["followup"]["answer_after"] = {"outcome": "full_change", "delta": 9}
+    with pytest.raises(ValidationError, match="answer_after"):
         Case.model_validate(case)
 
 

@@ -3,9 +3,10 @@
 Usage (by sandbox.runner only): python -s -B harness.py <control_dir>
 
 The harness reads its config from <control_dir>/config.json and deletes it, applies
-resource limits (POSIX only), blocks socket imports, runs the student's code from the
-current working directory, and writes a result JSON file tagged with a per-run nonce.
-It deliberately imports nothing that pulls in `socket`.
+resource limits (POSIX only), blocks networking and process creation, runs the student's
+code from the current working directory, and writes a result JSON file tagged with a
+per-run nonce.
+It deliberately imports nothing that pulls in `socket` or `subprocess`.
 """
 
 import json
@@ -15,26 +16,49 @@ import traceback
 from pathlib import Path
 from typing import Any
 
-BLOCKED_MODULES = frozenset({"socket", "_socket", "ssl", "_ssl"})
+NETWORK_MODULES = frozenset({"socket", "_socket", "ssl", "_ssl"})
+PROCESS_MODULES = frozenset({"subprocess", "_posixsubprocess", "multiprocessing"})
+PROCESS_FUNCTIONS = (
+    "system", "popen", "fork", "forkpty", "startfile",
+    "execl", "execle", "execlp", "execlpe", "execv", "execve", "execvp", "execvpe",
+    "spawnl", "spawnle", "spawnlp", "spawnlpe", "spawnv", "spawnve", "spawnvp", "spawnvpe",
+    "posix_spawn", "posix_spawnp",
+)  # fmt: skip
 
 
-class NetworkBlockedError(ImportError):
-    pass
+class SandboxBlockedError(ImportError):
+    def __init__(self, kind: str, what: str) -> None:
+        super().__init__(f"{kind} access is disabled in the sandbox ({what!r})")
+        self.kind = kind  # "network" or "process"
 
 
-class NetworkBlocker:
-    """Meta-path finder that refuses to import networking modules."""
+class ModuleBlocker:
+    """Meta-path finder that refuses to import networking and process modules."""
 
     def find_spec(self, name: str, path: Any = None, target: Any = None) -> None:
-        if name.split(".")[0] in BLOCKED_MODULES:
-            raise NetworkBlockedError(f"network access is disabled in the sandbox ({name!r})")
+        root = name.split(".")[0]
+        if root in NETWORK_MODULES:
+            raise SandboxBlockedError("network", name)
+        if root in PROCESS_MODULES:
+            raise SandboxBlockedError("process", name)
         return None
 
 
-def install_network_block() -> None:
-    for name in BLOCKED_MODULES:
+def blocked_function(name: str) -> Any:
+    def refuse(*args: Any, **kwargs: Any) -> None:
+        raise SandboxBlockedError("process", f"os.{name}")
+
+    return refuse
+
+
+def install_blocks() -> None:
+    """Block network and process creation. Must run after the harness's own imports."""
+    for name in NETWORK_MODULES | PROCESS_MODULES:
         sys.modules.pop(name, None)
-    sys.meta_path.insert(0, NetworkBlocker())
+    sys.meta_path.insert(0, ModuleBlocker())
+    for name in PROCESS_FUNCTIONS:
+        if hasattr(os, name):
+            setattr(os, name, blocked_function(name))
 
 
 def apply_limits(cpu_seconds: int, memory_mb: int, fsize_bytes: int) -> None:
@@ -51,14 +75,15 @@ def apply_limits(cpu_seconds: int, memory_mb: int, fsize_bytes: int) -> None:
     resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
 
 
-def is_network_blocked(exc: BaseException | None) -> bool:
+def blocked_kind(exc: BaseException | None) -> str | None:
+    """"network" or "process" if exc was caused by a sandbox block, else None."""
     seen: set[int] = set()
     while exc is not None and id(exc) not in seen:
-        if isinstance(exc, NetworkBlockedError):
-            return True
+        if isinstance(exc, SandboxBlockedError):
+            return exc.kind
         seen.add(id(exc))
         exc = exc.__cause__ or exc.__context__
-    return False
+    return None
 
 
 def invoke(config: dict[str, Any], control: Path) -> None:
@@ -85,7 +110,8 @@ def run_student_code(config: dict[str, Any], control: Path) -> tuple[str, str]:
         return ("test_failed" if config["mode"] == "test" else "exception"), summarise(exc)
     except BaseException as exc:  # includes SystemExit and KeyboardInterrupt from student code
         traceback.print_exc()
-        return ("network_blocked" if is_network_blocked(exc) else "exception"), summarise(exc)
+        kind = blocked_kind(exc)
+        return (f"{kind}_blocked" if kind else "exception"), summarise(exc)
     return "passed", ""
 
 
@@ -97,7 +123,7 @@ def main(argv: list[str]) -> int:
     nonce = config["nonce"]
     limits = config["limits"]
     apply_limits(limits["cpu_seconds"], limits["memory_mb"], limits["fsize_bytes"])
-    install_network_block()
+    install_blocks()
     sys.path[0] = os.getcwd()
     status, detail = run_student_code(config, control)
     sys.stdout.flush()

@@ -6,12 +6,14 @@ Isolation provided:
 - POSIX only (Linux on Kaggle): CPU-time, address-space and file-size limits via the
   `resource` module, applied in the child before student code is imported;
 - everywhere: a wall-clock timeout that kills the whole process group;
-- networking modules (`socket`, `ssl` and their C cores) cannot be imported.
+- networking modules (`socket`, `ssl` and their C cores) cannot be imported;
+- process creation is blocked: `subprocess` and `multiprocessing` cannot be imported, and
+  `os.system`, `os.popen`, `os.fork`, `os.exec*` and `os.spawn*` raise an error.
 
 Limitations: this guards against accidental damage, not a deliberately adversarial
 program. Without containers or OS-level sandboxing the network cannot be fully blocked
 (e.g. ctypes can call the C socket API directly), the file system outside the working
-directory is still reachable, child processes are not limited, and student code runs in
+directory is still reachable, ctypes could still start a process, and student code runs in
 the same process as the harness, so it could tamper with its own result. On Windows,
 CPU and memory limits are not enforced.
 """
@@ -32,7 +34,13 @@ from typing import Any
 from sandbox.cache import CacheKey, ResultCache, sha256_bytes
 from sandbox.result import ErrorType, RunResult
 
-REPORTED_STATUSES = {"test_failed", "exception", "memory_limit", "network_blocked"}
+REPORTED_STATUSES = {
+    "test_failed",
+    "exception",
+    "memory_limit",
+    "network_blocked",
+    "process_blocked",
+}
 
 HARNESS = Path(__file__).with_name("harness.py")
 HARNESS_HASH = sha256_bytes(HARNESS.read_bytes())  # cached results expire when it changes

@@ -108,6 +108,23 @@ def test_socket_use_is_blocked(
     assert result.error_type == "network_blocked"
 
 
+@pytest.mark.parametrize(
+    "body",
+    [
+        "    import subprocess\n    subprocess.run(['echo', 'hi'])",
+        "    import os\n    os.system('echo hi')",
+        "    import os\n    os.popen('echo hi')",
+        "    import multiprocessing\n    multiprocessing.Process()",
+    ],
+)
+def test_process_creation_is_blocked(
+    runner: SandboxRunner, tmp_path: Path, tests_file: Path, body: str
+) -> None:
+    result = run_add(runner, tmp_path, tests_file, body)
+    assert not result.passed
+    assert result.error_type == "process_blocked"
+
+
 def test_run_code_with_custom_input(runner: SandboxRunner, tmp_path: Path) -> None:
     submission = write(tmp_path, "mathlib.py", "def add(a, b):\n    return a + b\n")
     driver = "from mathlib import add\na, b = map(int, input().split())\nprint(add(a, b))"

@@ -10,6 +10,7 @@ ErrorType = Literal[
     "timeout",  # wall-clock or CPU-time limit exceeded
     "memory_limit",  # memory limit exceeded
     "network_blocked",  # code tried to import a networking module
+    "process_blocked",  # code tried to start another process
     "crashed",  # process exited without reporting a result
 ]
 

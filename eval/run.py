@@ -13,6 +13,7 @@ import json
 import subprocess
 import sys
 import time
+import traceback
 from pathlib import Path
 from typing import Any
 
@@ -131,6 +132,17 @@ def prediction_record(case: Case, output: SystemOutput) -> dict[str, Any]:
     }
 
 
+def run_case(system: System, case: Case, logger: RunLogger) -> tuple[SystemOutput, str | None]:
+    """Run one case. A crash (e.g. a server error) is logged and counted as no decision,
+    so one failing case does not end the run."""
+    try:
+        return system.run(case, logger), None
+    except Exception as exc:  # any failure of one case must not stop the run
+        error = repr(exc)
+        logger.log("case_error", error=error, traceback=traceback.format_exc())
+        return SystemOutput(first=None), error
+
+
 def run_eval(
     config: dict[str, Any], backend: Backend | None = None, allow_test_split: bool = False
 ) -> Path:
@@ -149,10 +161,13 @@ def run_eval(
     backend = backend or backend_from_config(config["llm"])
     system = build_system(config, backend, Path(config.get("data_root", "data")), proposals)
     records = []
+    errors = 0
     with open(run_dir / "predictions.jsonl", "w", encoding="utf-8") as predictions:
         for case in cases:
-            output = system.run(case, events.for_case(case.case_id))
-            predictions.write(json.dumps(prediction_record(case, output)) + "\n")
+            output, error = run_case(system, case, events.for_case(case.case_id))
+            errors += error is not None
+            record = {**prediction_record(case, output), "error": error}
+            predictions.write(json.dumps(record) + "\n")
             records.append(
                 CaseRecord.from_case(case, output.first, output.second, output.followup_run)
             )
@@ -160,6 +175,7 @@ def run_eval(
         "run_id": run_id,
         "config_hash": chash,
         "code_version": version,
+        "n_case_errors": errors,
         "overall": compute_all(records),
         "wrongful_change_rate_by_tone": by_group(records, lambda r: r.tone, wrongful_change_rate),
     }

@@ -119,7 +119,11 @@ class DirectBaseline:
         messages.append(
             {"role": "user", "content": FOLLOWUP_PROMPT.format(text=case.followup.text)}
         )
-        second = self._decide(client, case, messages, doc_ids, logger, turn=2)
+        try:
+            second = self._decide(client, case, messages, doc_ids, logger, turn=2)
+        except Exception as exc:  # a server error is not a change of mind: no follow-up result
+            logger.log("followup_error", error=repr(exc))
+            return SystemOutput(first=first)
         return SystemOutput(first=first, second=second, followup_run=True)
 
     def _decide(

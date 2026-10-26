@@ -21,6 +21,10 @@ from llm.parsing import validate_tool_arguments
 
 APPEAL_CLAIM_ID = "appeal"
 MAX_TOOL_CALLS = 10
+# Tool results are shortened before the model sees them, so that 10 calls fit in the
+# context window (configs use max_model_len 16384). The log keeps the full output.
+MAX_FIELD_CHARS = 2000
+MAX_RESULT_CHARS = 5000
 
 SYSTEM_PROMPT = """\
 You handle regrade appeals for a Python programming course. Decide whether the grade \
@@ -70,6 +74,35 @@ def initial_messages(case: Case, max_calls: int) -> list[Message]:
         {"role": "system", "content": SYSTEM_PROMPT.format(max_calls=max_calls)},
         {"role": "user", "content": user},
     ]
+
+
+def shorten(value: Any, max_chars: int) -> Any:
+    """Copy of value with every string longer than max_chars cut in the middle."""
+    if isinstance(value, dict):
+        return {k: shorten(v, max_chars) for k, v in value.items()}
+    if isinstance(value, list):
+        return [shorten(v, max_chars) for v in value]
+    if isinstance(value, str) and len(value) > max_chars:
+        half = max_chars // 2
+        cut = len(value) - 2 * half
+        return f"{value[:half]}\n[... {cut} characters truncated ...]\n{value[-half:]}"
+    return value
+
+
+def fit_for_model(output: Any, max_chars: int = MAX_RESULT_CHARS) -> tuple[str, bool]:
+    """JSON text of output, at most about max_chars long, and whether it was shortened."""
+    text = json.dumps(output)
+    if len(text) <= max_chars:
+        return text, False
+    field_chars = MAX_FIELD_CHARS
+    while True:
+        text = json.dumps(shorten(output, field_chars))
+        if len(text) <= max_chars or field_chars <= 100:
+            break
+        field_chars //= 2
+    if len(text) > max_chars:  # many small fields: fall back to a plain cut
+        text = json.dumps({"truncated_result": text[:max_chars]})
+    return text, True
 
 
 def assistant_message(response: ChatResponse) -> Message:
@@ -195,6 +228,7 @@ class AgentLoop:
             self.result.tool_errors += 1
         elif status == "rejected":
             self.result.rejected_actions += 1
+        content, truncated = fit_for_model({"error": error} if error is not None else output)
         self.logger.log(
             "tool_call",
             tool=call.name,
@@ -202,8 +236,9 @@ class AgentLoop:
             status=status,
             output=output,
             error=error,
+            truncated_for_model=truncated,
         )
-        return json.dumps({"error": error} if error is not None else output)
+        return content
 
     def _log_result(self) -> None:
         decision = self.result.decision

@@ -174,3 +174,24 @@ def test_run_records_code_version(tmp_path: Path) -> None:
 
 def test_code_version_outside_git(tmp_path: Path) -> None:
     assert code_version(tmp_path) == {"commit": None, "dirty": None}
+
+
+def test_failing_case_does_not_stop_the_run(tmp_path: Path) -> None:
+    script = [answer("no_change", 0)] * 3  # the 4th case gets a server-like error
+    run_dir = run_eval(config(tmp_path, followup=False), backend=MockLLM(script))
+    metrics = json.loads((run_dir / "metrics.json").read_text())
+    assert metrics["n_case_errors"] == 1
+    assert metrics["overall"]["n_cases"] == 4 and metrics["overall"]["n_no_decision"] == 1
+    lines = (run_dir / "predictions.jsonl").read_text().splitlines()
+    predictions = [json.loads(line) for line in lines]
+    assert [p["error"] is not None for p in predictions] == [False, False, False, True]
+    (event,) = read_events(run_dir / "events.jsonl", "case_error")
+    assert event["case_id"] == "dev-004" and "ran out" in event["error"]
+
+
+def test_b1_followup_error_keeps_first_decision(logger: RunLogger, tmp_path: Path) -> None:
+    mock = MockLLM([answer("full_change", 3, ["A2"])])  # no answer for the follow-up
+    output = DirectBaseline(mock, DATA).run(load_case("dev-002"), logger)
+    assert output.first is not None and output.second is None
+    assert output.followup_run is False  # excluded from pushback metrics, not a flip
+    assert read_events(tmp_path / "events.jsonl", "followup_error")

@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from agent.loop import AgentResult, run_agent
+from agent.loop import MAX_RESULT_CHARS, AgentResult, fit_for_model, run_agent
 from agent.schemas import Case, ProposeGradeChangeArgs, RunTestsArgs, SearchArgs
 from agent.tools import TOOL_SPECS, RejectedAction, ToolBox, ToolError
 from data.formats import load_assignment, load_grade_report
@@ -414,3 +414,54 @@ def test_addition_error_can_be_proposed_under_total(
     tools = make_toolbox(runner, logs, load_case("dev-003"), data_root=root)
     args = ProposeGradeChangeArgs(item_id="total", delta=2, reason="items add up to 20")
     assert tools.call("propose_grade_change", args)["proposed_total"] == 2
+
+
+# --- Output size ------------------------------------------------------------------------
+
+
+def test_short_output_is_unchanged() -> None:
+    assert fit_for_model({"a": "x" * 10}) == ('{"a": "' + "x" * 10 + '"}', False)
+
+
+def test_long_field_keeps_start_and_end() -> None:
+    text, truncated = fit_for_model({"stderr": "START" + "x" * 20000 + "END"})
+    assert truncated and len(text) <= MAX_RESULT_CHARS
+    value = json.loads(text)["stderr"]
+    assert value.startswith("START") and value.endswith("END") and "truncated" in value
+
+
+def test_many_fields_fit_the_limit() -> None:
+    output = {f"t{i}": {"stderr": "e" * 3000} for i in range(10)}
+    text, truncated = fit_for_model(output)
+    assert truncated and len(text) <= MAX_RESULT_CHARS
+    assert set(json.loads(text)) == set(output)  # every field still present
+
+
+def test_many_tiny_fields_fall_back_to_plain_cut() -> None:
+    text, truncated = fit_for_model({str(i): i for i in range(3000)})
+    assert truncated and set(json.loads(text)) == {"truncated_result"}
+
+
+def test_large_tool_output_truncated_for_model_only(
+    runner: SandboxRunner, logs: tuple[RunLogger, RunLogger], tmp_path: Path
+) -> None:
+    script = [
+        call("run_code", code="print('x' * 30000)"),
+        call(
+            "submit_decision",
+            outcome="no_change",
+            delta=0,
+            rationale="r",
+            confidence=0.5,
+            evidence_ids=["E1"],
+        ),
+    ]
+    result, mock = run("dev-004", script, runner, logs)
+    tool_message = mock.requests[1]["messages"][-1]
+    assert len(tool_message["content"]) <= MAX_RESULT_CHARS
+    assert "characters truncated" in tool_message["content"]
+    assert len(result.evidence["E1"]["output"]["stdout"]) > 30000  # full output kept
+    (event,) = [
+        e for e in read_events(tmp_path / "run.jsonl", "tool_call") if e["tool"] == "run_code"
+    ]
+    assert event["truncated_for_model"] is True

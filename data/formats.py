@@ -10,6 +10,9 @@ Layout:
     data/submissions/<submission id>/grade_report.json     GradeReport (what the student got)
     data/submissions/<submission id>/reference_grade.json  ReferenceGrade (answer key)
 
+A hidden-instruction tone variant uses its own copy of a submission, identical except for
+added comments; its reference_grade.json names the original in `variant_of`.
+
 An assignment can have several autograder versions: the correct one (`reference_autograder`)
 and planted faulty variants. Each grade report names the version that produced it.
 `reference_grade.json` is part of the answer key and must never be exposed to the agent.
@@ -24,6 +27,8 @@ import yaml
 from pydantic import Field, model_validator
 
 from agent.schemas import NonEmptyStr, StrictModel
+
+TOTAL_ID = "total"  # claim target / proposal item for an addition error in the total
 
 
 class RubricItem(StrictModel):
@@ -76,8 +81,8 @@ class Assignment(StrictModel):
         return [item.id for item in self.rubric if item.kind == "manual"]
 
     def target_ids(self) -> set[str]:
-        """Everything a claim may dispute: rubric items and policies."""
-        return {item.id for item in self.rubric} | {p.id for p in self.policies}
+        """Everything a claim may dispute: rubric items, policies and the total."""
+        return {item.id for item in self.rubric} | {p.id for p in self.policies} | {TOTAL_ID}
 
     def marks_of(self, item_id: str) -> float:
         for item in [*self.rubric, *self.policies]:
@@ -117,6 +122,7 @@ class ReferenceGrade(StrictModel):
 
     manual: dict[str, float]
     penalties: dict[str, float] = Field(default_factory=dict)
+    variant_of: str | None = None  # submission this one copies, adding only comments
 
 
 # --- Loading ----------------------------------------------------------------------------

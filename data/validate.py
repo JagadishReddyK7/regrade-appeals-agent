@@ -14,7 +14,8 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from agent.schemas import Case
-from data.grader import check_assignment, check_case
+from data.consistency import check_consistency
+from data.grader import base_submission, check_assignment, check_case
 from sandbox.runner import SandboxRunner
 
 
@@ -53,6 +54,12 @@ def validate_folder(
         results[path] = errors
     if data_root is not None:
         cross_check(cases, results, data_root, runner or SandboxRunner())
+        root = data_root
+        base_of = lambda case: base_submission(root, case.submission)  # noqa: E731
+    else:
+        base_of = lambda case: case.submission  # noqa: E731
+    for path, errors in check_consistency(cases, base_of).items():
+        results[path] += errors
     return results
 
 

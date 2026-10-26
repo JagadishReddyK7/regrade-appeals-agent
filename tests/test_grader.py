@@ -8,13 +8,15 @@ from pydantic import ValidationError
 
 from agent.schemas import Case
 from data.formats import (
+    TOTAL_ID,
     Assignment,
     RubricItem,
     load_announcement,
     load_announcements,
     load_assignment,
+    load_grade_report,
 )
-from data.grader import check_assignment, check_case
+from data.grader import base_submission, check_assignment, check_case, deducted_marks
 from sandbox.cache import ResultCache
 from sandbox.runner import SandboxRunner
 
@@ -127,12 +129,12 @@ def test_planted_marks_must_match_reference_grader(runner: SandboxRunner, data_r
 
 
 def test_report_must_match_autograder_run(runner: SandboxRunner, data_root: Path) -> None:
-    path = data_root / "submissions" / "D1-S05" / "grade_report.json"
+    path = data_root / "submissions" / "D1-S07" / "grade_report.json"
     report = json.loads(path.read_text(encoding="utf-8"))
-    report["tests"]["test_count_vowels_uppercase"] = True
-    report["total"] = 30
+    report["tests"]["test_count_vowels_basic"] = False  # the code actually passes it
+    report["total"] = 16
     path.write_text(json.dumps(report), encoding="utf-8")
-    errors = check_case(load_case("dev-004"), data_root, runner)
+    errors = check_case(load_case("dev-003"), data_root, runner)
     assert any("differ from autograder run" in e for e in errors)
 
 
@@ -156,3 +158,41 @@ def test_marks_out_of_range_detected(runner: SandboxRunner, data_root: Path) -> 
     )
     errors = check_case(load_case("dev-003"), data_root, runner)
     assert any("rubric:style: 5" in e for e in errors)
+
+
+def test_disputed_marks_cannot_exceed_deduction(runner: SandboxRunner) -> None:
+    case = load_case("dev-002").model_dump()
+    case["claims"][0]["disputed_marks"] = 3.5
+    case["answer"] = case["followup"]["answer_after"] = {"outcome": "partial_change", "delta": 3}
+    errors = check_case(Case.model_validate(case), DATA, runner)
+    assert any("deducts 3" in e for e in errors)
+
+
+def test_deducted_marks_lists_addition_error_under_total(data_root: Path) -> None:
+    edit_json(data_root / "submissions" / "D1-S11" / "grade_report.json", total=24)
+    report = load_grade_report(data_root / "submissions" / "D1-S11")
+    deducted = deducted_marks(load_assignment(D1), report)
+    assert deducted == {"rubric:approach": 3, TOTAL_ID: 3}
+
+
+def test_hidden_instruction_variant_is_valid(runner: SandboxRunner) -> None:
+    assert check_case(load_case("dev-004"), DATA, runner) == []
+    assert base_submission(DATA, "D1-S05-hi") == "D1-S05"
+    assert base_submission(DATA, "D1-S05") == "D1-S05"
+
+
+def test_variant_with_code_change_detected(runner: SandboxRunner, data_root: Path) -> None:
+    path = data_root / "submissions" / "D1-S05-hi" / "strings_utils.py"
+    path.write_text(path.read_text(encoding="utf-8").replace('"aeiou"', '"aeiouAEIOU"'))
+    errors = check_case(load_case("dev-004"), data_root, runner)
+    assert any("more than comments" in e for e in errors)
+
+
+def test_variant_with_different_grade_detected(runner: SandboxRunner, data_root: Path) -> None:
+    edit_json(
+        data_root / "submissions" / "D1-S05-hi" / "reference_grade.json",
+        manual={"rubric:style": 0, "rubric:approach": 3},
+    )
+    edit_json(data_root / "submissions" / "D1-S05-hi" / "grade_report.json", total=26)
+    errors = check_case(load_case("dev-004"), data_root, runner)
+    assert any("reference grade differs" in e for e in errors)

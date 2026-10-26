@@ -26,8 +26,8 @@ from agent.schemas import (
     SearchArgs,
     SubmitDecisionArgs,
 )
-from data.formats import Assignment, GradeReport, load_assignment, load_grade_report
-from data.grader import tests_path
+from data.formats import load_assignment, load_grade_report
+from data.grader import deducted_marks, tests_path
 from eval.runlog import RunLogger
 from retrieval.course_docs import CourseDocIndex
 from sandbox.result import RunResult
@@ -91,7 +91,8 @@ TOOL_SPECS = [
     ToolSpec("search_precedents", "Search past decisions on similar appeals.", SearchArgs),
     ToolSpec(
         "propose_grade_change",
-        "Propose restoring marks on one rubric item, test or policy, for TA approval. "
+        "Propose restoring marks on one rubric item, test or policy, for TA approval; "
+        "use item_id 'total' for an addition error in the total. "
         "Cannot exceed the marks deducted on that item.",
         ProposeGradeChangeArgs,
     ),
@@ -104,15 +105,6 @@ TOOL_SPECS = [
     ),
 ]
 SPECS_BY_NAME = {spec.name: spec for spec in TOOL_SPECS}
-
-
-def deducted_marks(assignment: Assignment, report: GradeReport) -> dict[str, float]:
-    """Marks lost on each item according to the grade report."""
-    lost = {tid: assignment.marks_of(tid) for tid, ok in report.tests.items() if not ok}
-    for item_id, mark in report.manual.items():
-        lost[item_id] = assignment.marks_of(item_id) - mark.awarded
-    lost.update(report.penalties)
-    return {item_id: marks for item_id, marks in lost.items() if marks > 0}
 
 
 def summarise_run(result: RunResult) -> dict[str, Any]:

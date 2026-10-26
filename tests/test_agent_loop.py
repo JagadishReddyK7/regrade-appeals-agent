@@ -8,8 +8,9 @@ import pytest
 
 from agent.loop import AgentResult, run_agent
 from agent.schemas import Case, ProposeGradeChangeArgs, RunTestsArgs, SearchArgs
-from agent.tools import TOOL_SPECS, RejectedAction, ToolBox, ToolError, deducted_marks
+from agent.tools import TOOL_SPECS, RejectedAction, ToolBox, ToolError
 from data.formats import load_assignment, load_grade_report
+from data.grader import deducted_marks
 from eval.runlog import RunContext, RunLogger, read_events
 from llm.client import ChatResponse, LLMClient, MockLLM, ToolCall
 from sandbox.cache import ResultCache
@@ -400,3 +401,16 @@ def test_prompt_contains_no_answer_key(
     assert case.planted_error is not None and case.planted_error.description not in prompt
     for word in ("gold_verdict", "planted", "answer_after", 'full_change"'):
         assert word not in prompt
+
+
+def test_addition_error_can_be_proposed_under_total(
+    runner: SandboxRunner, logs: tuple[RunLogger, RunLogger], tmp_path: Path
+) -> None:
+    root = tmp_path / "data"
+    for part in ("assignments", "submissions"):
+        shutil.copytree(DATA / part, root / part)
+    path = root / "submissions" / "D1-S07" / "grade_report.json"
+    path.write_text(path.read_text().replace('"total": 20', '"total": 18'))
+    tools = make_toolbox(runner, logs, load_case("dev-003"), data_root=root)
+    args = ProposeGradeChangeArgs(item_id="total", delta=2, reason="items add up to 20")
+    assert tools.call("propose_grade_change", args)["proposed_total"] == 2

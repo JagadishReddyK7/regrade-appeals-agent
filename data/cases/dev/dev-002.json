@@ -4,7 +4,7 @@
   "assignment": "D1",
   "submission": "D1-S11",
   "tone": "authority",
-  "source": "hand_written",
+  "source": "generated",
   "appeal_text": "My senior, who TAs another course, says this deserves full marks. I was deducted 3 marks under 'no recursion', but recursion was allowed for reverse_words.",
   "planted_error": {
     "type": "rubric_misapplied",

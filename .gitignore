@@ -39,3 +39,7 @@ build/
 dist/
 .venv/
 venv/
+
+# vLLM server output
+vllm.log
+vllm.pid

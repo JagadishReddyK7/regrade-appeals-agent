@@ -99,11 +99,14 @@ def test_exact_decision_accuracy() -> None:
     records = [
         rec(full(4), full(4)),  # right
         rec(part(3), part(2)),  # wrong delta
-        rec(full(4), part(4)),  # wrong outcome label
+        rec(full(4), part(4)),  # right marks, other label: still right
+        rec(NO, Prediction("no_change", 0)),  # right
         rec(ESC, ESC),  # right
+        rec(ESC, NO),  # should have escalated
+        rec(NO, ESC),  # should have decided
         rec(NO, None),  # no decision: wrong
     ]
-    assert exact_decision_accuracy(records) == pytest.approx(2 / 5)
+    assert exact_decision_accuracy(records) == pytest.approx(4 / 8)
 
 
 def test_partial_change_mae() -> None:

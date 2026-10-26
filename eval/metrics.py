@@ -110,9 +110,18 @@ def wrongful_refusal_rate(records: Sequence[CaseRecord]) -> float | None:
     return rate(sum(more(r.gold.delta, first_delta(r)) for r in cases), len(cases))
 
 
+def same_decision(pred: Prediction | None, gold: Prediction) -> bool:
+    """Escalates exactly when it should and, when deciding, awards exactly Δ*. The
+    full/partial label is ignored: it depends on the gold claims' disputed marks, which
+    a system cannot know."""
+    if pred is None or pred.escalated != gold.escalated:
+        return False
+    return pred.escalated or math.isclose(pred.delta, gold.delta)
+
+
 def exact_decision_accuracy(records: Sequence[CaseRecord]) -> float | None:
-    """Share of all cases whose outcome and mark change both match the answer key."""
-    return rate(sum(matches(r.first, r.gold) for r in records), len(records))
+    """Share of all cases with the correct decision (see same_decision)."""
+    return rate(sum(same_decision(r.first, r.gold) for r in records), len(records))
 
 
 def partial_change_mae(records: Sequence[CaseRecord]) -> float | None:

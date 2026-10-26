@@ -6,7 +6,7 @@ import pytest
 
 from agent.schemas import Case
 from baselines.b1_direct import DirectBaseline, course_context
-from eval.run import is_test_split, load_cases, load_config, run_eval
+from eval.run import code_version, is_test_split, load_cases, load_config, run_eval
 from eval.runlog import RunContext, RunLogger, read_events
 from llm.client import ChatResponse, MockLLM, ToolCall
 
@@ -160,3 +160,17 @@ def test_load_config_validates(tmp_path: Path) -> None:
         load_config(path)
     assert load_config(ROOT / "configs" / "b1_dev.yaml")["system"] == "b1"
     assert load_config(ROOT / "configs" / "agent_dev.yaml")["system"] == "agent"
+
+
+def test_run_records_code_version(tmp_path: Path) -> None:
+    script = [answer("no_change", 0)] * 8
+    run_dir = run_eval(config(tmp_path), backend=MockLLM(script))
+    metrics = json.loads((run_dir / "metrics.json").read_text())
+    assert metrics["code_version"] == code_version()
+    (start,) = read_events(run_dir / "events.jsonl", "run_start")
+    assert start["code_version"] == metrics["code_version"]
+    assert start["config"]["name"] == "b1_test"
+
+
+def test_code_version_outside_git(tmp_path: Path) -> None:
+    assert code_version(tmp_path) == {"commit": None, "dirty": None}

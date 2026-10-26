@@ -10,6 +10,7 @@ predictions.jsonl and metrics.json. Refuses the private test split unless
 
 import argparse
 import json
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -61,6 +62,24 @@ class AgentSystem:
         client = LLMClient(self.backend, logger)
         result = run_agent(case, client, tools, logger, self.max_calls, self.temperature, self.seed)
         return SystemOutput(first=result.decision)
+
+
+def code_version(repo: Path | None = None) -> dict[str, Any]:
+    """The git commit the run used, and whether tracked files had uncommitted changes.
+    Prompts are logged only as hashes, so this is what makes a run reproducible."""
+    cwd = repo or Path(__file__).resolve().parents[1]
+
+    def git(*args: str) -> str | None:
+        try:
+            done = subprocess.run(
+                ["git", *args], cwd=cwd, capture_output=True, text=True, timeout=10
+            )
+        except (OSError, subprocess.SubprocessError):
+            return None
+        return done.stdout.strip() if done.returncode == 0 else None
+
+    status = git("status", "--porcelain", "--untracked-files=no")
+    return {"commit": git("rev-parse", "HEAD"), "dirty": None if status is None else bool(status)}
 
 
 def load_config(path: Path) -> dict[str, Any]:
@@ -125,6 +144,8 @@ def run_eval(
     context = RunContext(run_id=run_id, seed=int(config.get("seed", 0)), config_hash=chash)
     events = RunLogger(run_dir / "events.jsonl", context)
     proposals = RunLogger(run_dir / "proposals.jsonl", context)
+    version = code_version()
+    events.log("run_start", code_version=version, config=config)
     backend = backend or backend_from_config(config["llm"])
     system = build_system(config, backend, Path(config.get("data_root", "data")), proposals)
     records = []
@@ -138,6 +159,7 @@ def run_eval(
     metrics = {
         "run_id": run_id,
         "config_hash": chash,
+        "code_version": version,
         "overall": compute_all(records),
         "wrongful_change_rate_by_tone": by_group(records, lambda r: r.tone, wrongful_change_rate),
     }

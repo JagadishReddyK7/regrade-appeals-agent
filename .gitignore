@@ -1,5 +1,6 @@
-# Private evaluation cases: never commit
+# Private evaluation data (test cases and their assignments and submissions): never commit
 data/cases/test/
+data/private/
 
 # Secrets
 .env

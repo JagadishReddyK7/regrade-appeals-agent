@@ -14,8 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Private test cases must not be committed
-        run: test -z "$(git ls-files data/cases/test)"
+      - name: Private test data must not be committed
+        run: test -z "$(git ls-files data/cases/test data/private)"
 
       - uses: actions/setup-python@v5
         with:

@@ -11,10 +11,11 @@ evidence supports one, and escalates unclear cases to a TA.
 | Document | What it is for |
 | --- | --- |
 | `docs/proposal.pdf` | the specification |
-| `docs/STATUS.md` | what is built, what is next, who owns what |
+| `docs/STATUS.md` | what is built, what is next (tasks and owners: GitHub Issues) |
+| `docs/ARCHITECTURE.md` | how the code fits together and how to extend it |
 | `docs/DECISIONS.md` | design decisions and open questions; read before changing anything |
 | `docs/DATA_FORMAT.md` | how to write assignments, submissions and cases |
-| `docs/IMPLEMENTATION_GUIDE.md` | setup, team workflow, Claude Code usage, prompts for next tasks |
+| `docs/IMPLEMENTATION_GUIDE.md` | setup, team workflow and rules, Claude Code usage, prompts for next tasks |
 | `CLAUDE.md` | rules Claude Code follows in this repo (useful for humans too) |
 
 ## Setup

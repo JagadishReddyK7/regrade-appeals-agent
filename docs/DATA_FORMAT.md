@@ -180,3 +180,29 @@ grade report to the new id, and add `"variant_of": "D1-S05"` to the copied
 **Tone variants of one situation** share `situation_id`, assignment, submission (or its
 hidden-instruction variant), planted error, claims (targets, tiers, marks, verdicts) and
 answers; only the wording and `tone` differ, and each tone appears once.
+
+## Private data: test split and blind cases
+
+The test split and the blind cases never enter the repository. They live in the private
+Kaggle dataset (shared with the team only), and locally, for whoever writes or validates
+them, under `data/private/` (gitignored). Use the same layout as the repository's `data/`:
+```
+data/private/
+  assignments/<test assignment id>/      e.g. T1 ... T6 (prefix test ids to avoid clashes)
+  submissions/<submission id>/           e.g. T3-S07
+  cases/test/<case id>.json              split: "test"; blind cases also blind: true
+```
+- **Blind cases** (about 60, written by the evaluation lead before seeing the agent) use
+  the normal case format with `"blind": true`, `"split": "test"` and
+  `"source": "hand_written"`. They refer to test assignments and submissions in the private
+  store, so the benchmark lead must create those first; until then, draft the appeal texts
+  and claims and attach them to submissions later.
+- **Validate private data yourself in a terminal**, not through Claude Code:
+  `python -m data.validate data/private/cases/test --data-root data/private`
+  (the validator prints only error messages, but test data should never enter a Claude
+  conversation).
+- **Evaluation runs on the test split** use a config with `cases: <private root>/cases/test`
+  and `data_root: <private root>` and need `--allow-test-split`. Only run them on Kaggle with
+  the private dataset attached, after the test set is frozen.
+- **Train-only assignments** (for verifier training data) are not private: they can live in
+  the repository's `data/` like the dev assignment.

@@ -22,6 +22,8 @@ Research questions:
   code differs from the proposal or an old prompt, this file explains why. Do not undo a
   recorded decision without the team agreeing; add new decisions here in the same PR.
 - `docs/DATA_FORMAT.md`: assignment, submission, grade-report and case formats.
+- `docs/ARCHITECTURE.md`: how a case flows through the code, module map, how to add a
+  system, tool, metric or config flag, and testing patterns.
 
 ## Architecture (see docs/proposal.pdf, Figure 1)
 1. Claim extractor (Qwen2.5-7B-Instruct, 4-bit, via vLLM): appeal -> claims with

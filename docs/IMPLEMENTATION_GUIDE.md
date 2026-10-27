@@ -41,10 +41,13 @@ progress into `docs/STATUS.md`. Each PR updates them.
 2. Settings -> Branches -> add a rule for `main`: require a pull request with 1 approval,
    and require status checks to pass: select `test (3.11)` and `test (3.13)` (they appear
    in the list after CI has run once).
-3. Issues: one issue per task in `docs/STATUS.md`, with an owner.
-4. Private test store: a private Kaggle dataset (shared with the team) holding
-   `cases/test/`, and the test assignments and submissions, in the layout of
-   `docs/DATA_FORMAT.md`.
+3. Settings -> General -> Pull Requests: allow only **squash merging**, and tick
+   "Automatically delete head branches".
+4. Issues: create a label `decision`, then one issue per task in `docs/STATUS.md`
+   (owners assigned at the kickoff).
+5. Private test store: a private Kaggle dataset (shared with the team) holding
+   `assignments/`, `submissions/` and `cases/test/` in the layout of
+   `docs/DATA_FORMAT.md` ("Private data").
 
 ## Step 3: The loop for every task
 
@@ -56,14 +59,81 @@ progress into `docs/STATUS.md`. Each PR updates them.
    `data/cases/test/` or `data/private/`, no secrets, no `.claude/settings.local.json`),
    then run it.
 5. Open a pull request. CI must pass; a teammate reviews and merges.
-6. In the same PR: update `docs/STATUS.md`, and add any design decision to
-   `docs/DECISIONS.md`.
+6. In the same PR: add any design decision to `docs/DECISIONS.md`, and update
+   `docs/STATUS.md` if a milestone-level item finished. Track progress in the issue.
+
+## Step 3b: Working as a team
+
+**Where things live (one source of truth each)**
+| What | Where |
+| --- | --- |
+| Tasks, owners, progress, discussion of a task | GitHub Issues (one per task; link PRs with "Closes #n") |
+| Milestone-level status, known limitations | `docs/STATUS.md` (update when a milestone item finishes) |
+| Design decisions, open questions | `docs/DECISIONS.md` |
+| How the code fits together | `docs/ARCHITECTURE.md` |
+| Data formats | `docs/DATA_FORMAT.md` |
+| Test split, blind cases | private Kaggle dataset only |
+
+**Branches and pull requests**
+- One task per branch and PR. Keep PRs small (roughly under 400 changed lines of code,
+  data excluded); split big tasks into several PRs. Open a draft PR early if others
+  depend on your interfaces.
+- Bring `main` into your branch at least daily, and always before opening a PR:
+  `git fetch origin` then `git merge origin/main`. Claude Code cannot run these
+  commands; you run them yourself.
+- Merge conflicts: resolve them in VS Code's merge editor, run `python -m pytest`, then
+  commit. Files that almost every task touches and therefore conflict most:
+  `agent/schemas.py`, `eval/run.py`, `docs/DECISIONS.md`, `docs/STATUS.md`. Add new
+  schema models and decisions at the end of the relevant section, and keep unrelated
+  edits to these files out of your PR.
+- Merge with **squash and merge** so `main` has one commit per PR. The author merges
+  after approval and green CI, then deletes the branch.
+
+**Reviews**
+- Every PR needs one approval. Review within one working day; if you cannot, say so in
+  the PR so someone else takes it.
+- Review against the checklist in the PR template (it appears automatically). Look in
+  particular for answer-key leakage, test data, missing tests and unrecorded decisions.
+- Ask questions in the PR; small fixes can go into the same PR.
+
+**Decisions**
+- Inside a role's area (e.g. data format details for the benchmark lead), the role lead
+  decides, records it in `docs/DECISIONS.md` and mentions it at the next sync.
+- Anything that affects other roles, the metrics, the benchmark's validity or the
+  proposal's research questions is decided by the team: raise it as an issue labelled
+  `decision`, settle it at the weekly sync (majority if needed), then record it.
+- Open questions live at the end of `docs/DECISIONS.md` until decided.
+
+**Communication**
+- A weekly sync (30 min): issue board, blockers, decisions, next week's GPU plan.
+- A team chat for quick questions; anything that matters later goes into an issue or
+  `docs/DECISIONS.md`, not only the chat.
+
+**Kaggle GPU time**
+Each account has about 30 GPU hours a week; the proposal estimates 55-75 GPU hours in
+total. Plan the week's GPU jobs at the sync, run each job type from one owner's account,
+and note GPU hours used in the job's issue. Suggested split: agent lead runs pilots and
+agent dev runs; fine-tuning lead runs data generation and verifier training; evaluation
+lead runs the main evaluation and ablations (one account and one environment for all
+main runs, so results are comparable).
+
+## Kickoff agenda (first team meeting)
+1. Walk through `docs/STATUS.md`, `docs/ARCHITECTURE.md` and the pilot results.
+2. Assign the four roles (proposal section 14) and issue owners.
+3. Agree the sync day, the chat channel and the GPU split.
+4. Decide or assign the open questions in `docs/DECISIONS.md`.
+5. Decide, or assign by week 2: the labelling protocol (two independent labellers,
+   Cohen's kappa, dropping disagreements), the sources of openly licensed course material
+   (recorded with their licences), and the test-freeze procedure (for example a manifest
+   of file hashes committed at freeze time, checked before every main run).
+6. Confirm the evaluation lead writes the blind cases before reading agent code or prompts.
 
 ## Step 4: Working with Claude Code efficiently (Pro has usage limits)
 
 - One task per session; clear the context between unrelated tasks.
 - Point it at the docs: every prompt starts with "Read CLAUDE.md, docs/STATUS.md and
-  docs/DECISIONS.md".
+  docs/DECISIONS.md" (and docs/ARCHITECTURE.md for code changes).
+- Never paste test-split data or blind cases into a Claude conversation.
 - Ask it to check its work against `docs/DECISIONS.md` before you approve a plan.
 - Always ask for tests. You are responsible for the code in the report.
 

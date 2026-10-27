@@ -26,9 +26,11 @@ assignment.
 | Kaggle pilot notebook | `notebooks/pilot_dev.ipynb` | not run yet |
 | CI | `.github/workflows/tests.yml` | lint, validator, tests on Python 3.11 and 3.13 |
 
-## Next: rest of week 1 (owners to be assigned at the kickoff)
-Roles follow proposal section 14. Ready-to-paste prompts for these tasks are in
-`docs/IMPLEMENTATION_GUIDE.md`.
+## Next: rest of week 1 (plan as of 2026-10-27)
+**GitHub Issues are the task board** (one issue per row, with owner and progress). This
+table is the initial plan and is not updated per task; update this file only when a
+milestone-level item finishes or the plan changes. Roles follow proposal section 14.
+Ready-to-paste prompts are in `docs/IMPLEMENTATION_GUIDE.md`.
 
 | # | Task | Role | Depends on |
 | --- | --- | --- | --- |
@@ -44,7 +46,7 @@ Roles follow proposal section 14. Ready-to-paste prompts for these tasks are in
 | R1 | Evidence bundle format shared by agent and verifier | retrieval/FT lead + agent lead | - |
 | R2 | Precedent store; rank in-force announcements above superseded ones | retrieval/FT lead | - |
 | R3 | QLoRA smoke test on Kaggle | retrieval/FT lead | R1 |
-| E1 | Write the ~60 blind cases **before reading agent code or prompts** | evaluation lead | data format |
+| E1 | Write the ~60 blind cases **before reading agent code or prompts**; store them only in the private store (`docs/DATA_FORMAT.md`) | evaluation lead | test assignments (B4), or draft appeal texts first |
 | E2 | Baseline B0; result breakdowns by tier, error type, validity, source | evaluation lead | - |
 | E3 | Statistics: paired permutation tests, Holm, bootstrap by situation | evaluation lead | - |
 | E4 | Definitions of safety metrics, then implementation | evaluation lead | open question 5 |

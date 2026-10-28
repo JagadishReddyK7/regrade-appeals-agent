@@ -15,7 +15,8 @@ assignment.
 | Data formats, reference grader, validator | `data/` | `python -m data.validate <folder>`; see `docs/DATA_FORMAT.md` |
 | Cross-case consistency checks | `data/consistency.py` | situations, equivalence groups, minimal pairs |
 | Dev assignment D1 | `data/assignments/D1`, `data/submissions/D1-*` | 2 autograder versions, 2 announcements, 5 submissions |
-| Dev cases | `data/cases/dev/`, `data/situations/dev/` | 16 cases (LLM-written): 4 situations x 4 tones, built with `data/build_cases.py` (B2) |
+| Dev cases | `data/cases/dev/`, `data/situations/dev/` | 24 cases (LLM-written): 6 situations x 4 tones covering all four error types, built with `data/build_cases.py` (B2, B3) |
+| Benchmark plan | `docs/BENCHMARK_PLAN.md` | reduced quotas for the test set (B1); draft for team agreement |
 | Sandbox | `sandbox/` | limits (Linux), network and process block, result cache |
 | LLM client and run log | `llm/client.py`, `llm/parsing.py`, `eval/runlog.py` | vLLM and mock backends; JSONL events with run/case/seed/config hash/commit |
 | vLLM launcher and smoke test | `llm/serve.py`, `llm/smoke.py` | checks chat, tool calls, constrained JSON |
@@ -58,8 +59,8 @@ appeals? (3) What is the real GPU time per appeal? Update the plan before week 2
 ## Known limitations of what is built
 - The agent's and B1's system prompts have never met a real model; expect tuning on dev.
 - The agent has no follow-up turn yet, so its pushback metrics read `None` (A2).
-- Dev has 4 situations (one assignment); `missed_partial_credit` and `arithmetic_error`
-  situations are still missing (B3 continues).
+- Dev has 6 situations on one assignment (D1) and all appeals are LLM-written, so dev
+  results are preliminary; the test set (B4) has not started.
 - Cases run one at a time (A4); time and tokens per appeal are logged but not summarised (A3).
 - The full test suite takes about 30-60 s on Windows (many sandbox subprocesses).
 

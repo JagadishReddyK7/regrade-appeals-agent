@@ -62,7 +62,7 @@ def logger(tmp_path: Path) -> RunLogger:
 def test_b1_prompt_has_documents_but_no_answer_key() -> None:
     case = load_case("dev-002")
     text, doc_ids = course_context(DATA, case)
-    assert doc_ids == {"spec", "rubric", "A1", "A2", "grade_report", "submission"}
+    assert doc_ids == {"spec", "rubric", "A1", "A2", "A3", "grade_report", "submission"}
     assert "Supersedes: A1" in text and "Date: 2026-09-12" in text
     assert "def reverse_words" in text
     assert "reference_grade" not in text and 'rubric:approach": 3' not in text

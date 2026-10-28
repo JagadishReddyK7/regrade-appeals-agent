@@ -94,6 +94,17 @@ Formats are described in `docs/DATA_FORMAT.md`; this section records why they lo
     (`source: "generated"`, see 2.11). The runner tests in `tests/test_eval_run.py` now run on
     a copy of `dev-001..004`, so growing the dev folder does not change their scripted results.
 
+14. **Partial credit for style is defined in announcement A3** (D1, 2026-09-19): 2 marks if
+    every function has a docstring, 1 if at least one but not every, 0 if none. The
+    `missed_partial_credit` situation (sit05) needs a rule the documents state; the correct
+    marks are then decidable from the course documents, like the other error types. A3 does
+    not supersede an earlier announcement. A `missed_partial_credit` claim has gold verdict
+    `supported` with `disputed_marks` 2 (what the student asks for) and a correct delta of 1
+    (partial change).
+15. **The test set is scaled down** from about 300 to about 126 cases (28 situations on 3
+    test assignments, 2 equivalence groups, 3 minimal pairs); `docs/BENCHMARK_PLAN.md` lists
+    every cut and the reasons. Affects the proposal's scale, so it needs the team's agreement.
+
 ## 3. Sandbox
 
 - **One subprocess per run**, fresh temporary working directory, clean environment, fixed

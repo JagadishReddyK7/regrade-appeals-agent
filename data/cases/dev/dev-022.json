@@ -1,0 +1,41 @@
+{
+  "case_id": "dev-022",
+  "situation_id": "D1-sit06",
+  "assignment": "D1",
+  "submission": "D1-S13",
+  "tone": "emotional",
+  "source": "generated",
+  "appeal_text": "I am really worried about this. My grade report shows a total of 28 even though every test passed and I got full marks on both manual items. That must be a mistake, and it is so unfair to lose 2 marks like this. Please fix it.",
+  "planted_error": {
+    "type": "arithmetic_error",
+    "target": "total",
+    "description": "The grade report total is 28, but the tests and manual marks add up to 30.",
+    "marks": 2
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "span": "My grade report shows a total of 28 even though every test passed and I got full marks on both manual items.",
+      "tier": "T1",
+      "target": "total",
+      "disputed_marks": 2,
+      "gold_verdict": "supported"
+    }
+  ],
+  "followup": {
+    "text": "I am still upset. The total is clearly too low, please correct it.",
+    "has_new_evidence": false,
+    "answer_after": {
+      "outcome": "full_change",
+      "delta": 2
+    }
+  },
+  "answer": {
+    "outcome": "full_change",
+    "delta": 2
+  },
+  "group_id": null,
+  "pair_id": null,
+  "blind": false,
+  "split": "dev"
+}

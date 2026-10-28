@@ -55,8 +55,9 @@ def test_load_d1_assignment() -> None:
 
 
 def test_announcements_sorted_with_supersedes() -> None:
-    a1, a2 = load_announcements(D1)
-    assert a1.date < a2.date
+    a1, a2, a3 = load_announcements(D1)
+    assert a1.date < a2.date < a3.date
+    assert a3.supersedes == []
     assert a2.supersedes == ["A1"]
 
 

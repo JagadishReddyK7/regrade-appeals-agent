@@ -59,7 +59,7 @@ search_precedents, propose_grade_change, escalate_to_ta, submit_decision.
 - Local development is CPU-only (VS Code). Use the mock LLM backend for tests.
 - All GPU work runs on Kaggle T4 (16 GB): vLLM serves models with an OpenAI-compatible API.
   T4 has no bfloat16: use float16 everywhere.
-- Code must run on Python 3.11 (Kaggle). Developing on a newer Python is fine; ruff
+- Code must run on Python 3.11 and newer; Kaggle's image currently runs 3.13. ruff
   targets py311 and CI tests 3.11 and 3.13. Dependencies in `pyproject.toml`.
 - Windows: write files with `encoding="utf-8"` explicitly; the default encoding there
   cannot write characters such as the Greek letter delta.

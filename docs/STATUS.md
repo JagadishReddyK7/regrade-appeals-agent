@@ -8,6 +8,13 @@ tested against a mock model; **nothing has run on a real model yet** (the Kaggle
 the next step). The benchmark is the critical path and has not started beyond one dev
 assignment.
 
+## Pilot log
+- **Attempt 1 (2026-10-27, commit 8080ae4): failed before the model loaded.** vLLM 0.32.0
+  with PyTorch 2.13 (CUDA 13.0) clashed with Kaggle's torchaudio (CUDA 12.8). Fixed in
+  the notebook (torchaudio uninstalled). The rest of the pipeline behaved as designed:
+  the launcher reported the crash, the smoke test failed cleanly, and the runs recorded
+  4 case errors with the commit. Environment: Python 3.13, 2x Tesla T4 (compute 7.5).
+
 ## Built
 | Area | Where | Notes |
 | --- | --- | --- |

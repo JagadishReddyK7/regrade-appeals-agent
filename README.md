@@ -20,7 +20,8 @@ evidence supports one, and escalates unclear cases to a TA.
 
 ## Setup
 
-Requires Python 3.11 or newer; code must stay compatible with 3.11 (the version on Kaggle).
+Requires Python 3.11 or newer; code must stay compatible with 3.11 (CI tests 3.11 and
+3.13; Kaggle currently runs 3.13).
 
 ```
 python -m venv .venv

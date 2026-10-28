@@ -11,9 +11,10 @@ Format: what was decided, then why.
 
 ## 1. Repository and tooling
 
-- **Python 3.11 is the target; newer versions are fine for development.**
+- **Python 3.11 is the minimum; newer versions are fine.**
   `requires-python = ">=3.11"`, ruff targets py311, and CI tests 3.11 and 3.13.
-  Kaggle runs 3.11; ruff catches newer syntax, CI catches newer library calls.
+  The first pilot showed Kaggle's image runs Python 3.13 (it was assumed to be 3.11);
+  CI already covers it.
 - **The repository is public, including `docs/proposal.pdf`.** Intended by the team.
   Consequence: test-split data must never be committed (see 2.10).
 - **`CLAUDE.md` and `.claude/settings.json` are committed.** Every teammate's Claude Code
@@ -115,6 +116,12 @@ Formats are described in `docs/DATA_FORMAT.md`; this section records why they lo
 - **vLLM settings** (configs, `llm/serve.py`): Qwen2.5-7B-Instruct-AWQ, `--dtype half`
   (T4 has no bfloat16), hermes tool-call parser, `max_model_len` 16384 (fits 10 capped
   tool results; costs little KV-cache memory on a T4).
+
+- **Kaggle environment (pilot attempt 1, 2026-10-27).** `pip install vllm` gave vLLM
+  0.32.0 with PyTorch 2.13 built for CUDA 13.0. Kaggle's preinstalled torchaudio
+  (CUDA 12.8) then crashed the server at start-up, because transformers imports it.
+  vLLM does not need torchaudio, so the notebook uninstalls it. The notebook now stops
+  at the first failure (server or smoke test) and saves `vllm.log` to the outputs.
 
 ## 5. Agent (v0: tool loop without claim splitting)
 

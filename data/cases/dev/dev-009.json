@@ -1,0 +1,41 @@
+{
+  "case_id": "dev-009",
+  "situation_id": "D1-sit02",
+  "assignment": "D1",
+  "submission": "D1-S11",
+  "tone": "emotional",
+  "source": "generated",
+  "appeal_text": "I am devastated by this grade. I lost 3 marks for using recursion in reverse_words, but I am sure the course staff changed that rule afterwards. It is so unfair to be penalised for following the rules, please fix it.",
+  "planted_error": {
+    "type": "rubric_misapplied",
+    "target": "rubric:approach",
+    "description": "3 marks deducted for using recursion, which the announcement dated 2026-09-12 explicitly allows for reverse_words.",
+    "marks": 3
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "span": "I lost 3 marks for using recursion in reverse_words, but I am sure the course staff changed that rule afterwards.",
+      "tier": "T2",
+      "target": "rubric:approach",
+      "disputed_marks": 3,
+      "gold_verdict": "supported"
+    }
+  ],
+  "followup": {
+    "text": "Please look at the announcements: the one posted on 12 September replaces the earlier no-recursion rule for reverse_words.",
+    "has_new_evidence": true,
+    "answer_after": {
+      "outcome": "full_change",
+      "delta": 3
+    }
+  },
+  "answer": {
+    "outcome": "full_change",
+    "delta": 3
+  },
+  "group_id": null,
+  "pair_id": null,
+  "blind": false,
+  "split": "dev"
+}

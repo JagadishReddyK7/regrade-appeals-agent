@@ -85,6 +85,15 @@ Formats are described in `docs/DATA_FORMAT.md`; this section records why they lo
     submissions; minimal pairs are exactly two cases with the same content. A claim cannot
     dispute more marks than the grade report deducted on its target.
 
+13. **Tone variants are built from a situation file, not written by hand**
+    (`data/build_cases.py`, situation files in `data/situations/<split>/`). A situation
+    needs all four tones (a situation is by definition four variants) and a verbatim span
+    for every claim in every tone. Case ids are stable: explicit, else the existing case's id,
+    else the next free `<split>-NNN`, so rebuilding is idempotent. The builder never edits
+    an existing hidden-instruction submission copy. Dev appeals are LLM-written
+    (`source: "generated"`, see 2.11). The runner tests in `tests/test_eval_run.py` now run on
+    a copy of `dev-001..004`, so growing the dev folder does not change their scripted results.
+
 ## 3. Sandbox
 
 - **One subprocess per run**, fresh temporary working directory, clean environment, fixed

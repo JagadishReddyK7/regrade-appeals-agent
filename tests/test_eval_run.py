@@ -1,4 +1,5 @@
 import json
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -28,10 +29,15 @@ def answer(outcome: str, delta: float, evidence: list[str] | None = None) -> str
 
 
 def config(tmp_path: Path, system: str = "b1", **extra: Any) -> dict[str, Any]:
+    # The runner tests script the model for exactly these four cases; the dev folder grows.
+    cases = tmp_path / "cases"
+    cases.mkdir(exist_ok=True)
+    for case_id in ("dev-001", "dev-002", "dev-003", "dev-004"):
+        shutil.copy(DEV / f"{case_id}.json", cases / f"{case_id}.json")
     return {
         "name": f"{system}_test",
         "system": system,
-        "cases": str(DEV),
+        "cases": str(cases),
         "data_root": str(DATA),
         "output_dir": str(tmp_path / "runs"),
         "seed": 0,

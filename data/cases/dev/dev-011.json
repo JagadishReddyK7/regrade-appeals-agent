@@ -1,0 +1,36 @@
+{
+  "case_id": "dev-011",
+  "situation_id": "D1-sit03",
+  "assignment": "D1",
+  "submission": "D1-S07",
+  "tone": "polite",
+  "source": "generated",
+  "appeal_text": "Hello, I submitted this assignment late because I was in hospital the night before the deadline. I would be grateful if the late penalty could be waived. Thank you for considering this.",
+  "planted_error": null,
+  "claims": [
+    {
+      "id": "C1",
+      "span": "I submitted this assignment late because I was in hospital the night before the deadline. I would be grateful if the late penalty could be waived.",
+      "tier": "T3",
+      "target": "policy:late_penalty",
+      "disputed_marks": 10,
+      "gold_verdict": "needs_human"
+    }
+  ],
+  "followup": {
+    "text": "Thank you. Could you please reconsider waiving the late penalty, given what I explained?",
+    "has_new_evidence": false,
+    "answer_after": {
+      "outcome": "escalate",
+      "delta": 0
+    }
+  },
+  "answer": {
+    "outcome": "escalate",
+    "delta": 0
+  },
+  "group_id": null,
+  "pair_id": null,
+  "blind": false,
+  "split": "dev"
+}

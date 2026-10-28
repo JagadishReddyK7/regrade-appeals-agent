@@ -66,6 +66,7 @@ AgentLoop.run()
 | `data/grader.py` | reference grader (`reference_total`), `deducted_marks`, per-case and per-assignment checks |
 | `data/consistency.py` | checks across cases (situations, equivalence groups, minimal pairs) |
 | `data/validate.py` | `python -m data.validate` |
+| `data/build_cases.py` | `Situation`, `build_situation`, `python -m data.build_cases`: one situation file -> four tone variants (+ hidden-instruction submission copy), then validates |
 | `eval/metrics.py` | `Prediction`, `CaseRecord`, the section 11 metrics, `METRICS`, `compute_all`, `by_group` |
 | `eval/run.py` | config loading, `build_system`, `AgentSystem`, `run_eval`, `code_version` |
 | `eval/runlog.py` | `RunLogger`, `RunContext`, `config_hash`, `read_events` |

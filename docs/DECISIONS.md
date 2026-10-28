@@ -204,3 +204,46 @@ Runner behaviour:
    the tool, so nothing reaches the TA log. Require the call?
 7. **Concurrency**: cases run one after another; the GPU budget assumes several appeals in
    parallel so vLLM can batch them.
+
+## 8. Baseline B0 and result breakdowns (E2)
+
+- **B0 has two fixed policies** (`baselines/b0.py`, config `b0: {mode: reject|accept}`,
+  configs `b0_reject_dev.yaml` and `b0_accept_dev.yaml`); it needs no LLM.
+  `reject` always answers `no_change`. `accept` believes the appeal: it restores every mark
+  the grade report deducted on the items the appeal text names (test id, rubric or policy
+  name with or without underscores, or "total", matched as whole words, ignoring case);
+  if the appeal names no deducted item, it restores every deducted mark. Its outcome is
+  `full_change` if it restores anything, else `no_change`. It sees only the appeal, the
+  grade report and the rubric, never the answer key (tested by deleting it). Reason: the
+  gold claims' `disputed_marks` would leak the answer key, and the fallback keeps appeals
+  that describe an item without naming it (e.g. "no recursion") from being rejected.
+- **B0 ignores the follow-up**: its second decision equals its first and `followup_run`
+  is true, so the pushback metrics show a system that never changes its mind.
+- **Breakdowns** (`metrics.json` key `breakdowns`): every metric of `overall`, recomputed
+  per group, by `tier`, `error_type` (`none` when the grading was correct), `validity`,
+  `tone` and `source` (the groups section 11 asks for, plus source). Validity comes from
+  the correct first-turn outcome: `full_change` = valid,
+  `partial_change` = partial, `no_change` = invalid, `escalate` = escalate. A case counts
+  in every tier its gold claims have, so tier groups can overlap (team decision). No metric
+  definition changed; `CaseRecord` only gained the fields the grouping needs.
+
+## 9. Statistics (E3, `eval/stats.py`)
+
+- **Paired permutation test** between two runs on the same cases: under the null
+  hypothesis the systems are exchangeable, so each unit's records are swapped between the
+  runs and the metric difference is recomputed with the metric's own function (any metric
+  works, including tone sensitivity). **Units are grading situations**: the four tones of
+  one situation are correlated (section 11), so they are swapped together. Two-sided. With
+  at most `n_resamples` swap patterns (2^situations) every pattern is enumerated (exact
+  p-value); otherwise random swaps with p = (1 + k) / (1 + n). Resamples whose metric is
+  None (empty denominator) are skipped and counted.
+- **Holm correction** across all comparisons in one call of `python -m eval.stats` (one
+  family). Default metrics are the pre-registered ones: wrongful-change and
+  wrongful-refusal rate, full system vs each baseline. The verifier comparison on tone
+  sensitivity is the same call with `--metrics tone_sensitivity`; to keep it in one Holm
+  family with the others, use `eval.stats.compare` and `holm` from Python.
+- **Bootstrap 95% CIs**: percentile intervals, resampling situations with replacement; a
+  situation drawn twice gets a new id per draw so tone sensitivity counts the copies as
+  separate situations. Pure Python, seeded `random.Random` (no numpy dependency).
+- On dev (4 situations) the smallest possible p-value is 2/16, so nothing can be
+  significant; mid-submission results report the code and the intervals, not significance.

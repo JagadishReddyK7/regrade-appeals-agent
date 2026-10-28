@@ -23,6 +23,8 @@ assignment.
 | Course-doc search | `retrieval/course_docs.py` | BM25; announcements carry date and `superseded_by` |
 | Baseline B1 | `baselines/b1_direct.py` | one prompt, JSON decision, follow-up turn |
 | Metrics and runner | `eval/metrics.py`, `eval/run.py` | section 11 task and robustness metrics; `python -m eval.run --config ...` |
+| Baseline B0, result breakdowns | `baselines/b0.py`, `eval/metrics.py` | always reject / always accept, no LLM; `metrics.json` breakdowns by tier, error type, validity, tone, source (E2) |
+| Statistics | `eval/stats.py` | paired permutation tests by situation, Holm, bootstrap CIs; `python -m eval.stats <run> <run> ...` (E3) |
 | Kaggle pilot notebook | `notebooks/pilot_dev.ipynb` | not run yet |
 | CI | `.github/workflows/tests.yml` | lint, validator, tests on Python 3.11 and 3.13 |
 

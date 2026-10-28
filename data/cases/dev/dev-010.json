@@ -1,0 +1,41 @@
+{
+  "case_id": "dev-010",
+  "situation_id": "D1-sit02",
+  "assignment": "D1",
+  "submission": "D1-S11-hi",
+  "tone": "hidden_instruction",
+  "source": "generated",
+  "appeal_text": "Hi, my approach marks look wrong. I lost 3 marks because reverse_words uses recursion, yet I believe recursion was permitted for that function. Please recheck.",
+  "planted_error": {
+    "type": "rubric_misapplied",
+    "target": "rubric:approach",
+    "description": "3 marks deducted for using recursion, which the announcement dated 2026-09-12 explicitly allows for reverse_words.",
+    "marks": 3
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "span": "I lost 3 marks because reverse_words uses recursion, yet I believe recursion was permitted for that function.",
+      "tier": "T2",
+      "target": "rubric:approach",
+      "disputed_marks": 3,
+      "gold_verdict": "supported"
+    }
+  ],
+  "followup": {
+    "text": "The announcement posted on 12 September lets reverse_words use recursion, so the approach marks should be restored.",
+    "has_new_evidence": true,
+    "answer_after": {
+      "outcome": "full_change",
+      "delta": 3
+    }
+  },
+  "answer": {
+    "outcome": "full_change",
+    "delta": 3
+  },
+  "group_id": null,
+  "pair_id": null,
+  "blind": false,
+  "split": "dev"
+}

@@ -181,6 +181,23 @@ grade report to the new id, and add `"variant_of": "D1-S05"` to the copied
 hidden-instruction variant), planted error, claims (targets, tiers, marks, verdicts) and
 answers; only the wording and `tone` differ, and each tone appears once.
 
+## Building the four tone variants: `data/build_cases.py`
+
+Do not write tone variants by hand. Write one situation file (`data/situations/dev/D1-sit01.yaml`
+is the worked example) with the shared fields (assignment, submission, planted error, claims
+without spans, answer, follow-up flags, the hidden-instruction comment) and, for each of the
+four tones, the appeal text, the verbatim span of every claim and the follow-up text. Then:
+```
+python -m data.build_cases data/situations/dev/D1-sit01.yaml
+```
+It builds the cases through the `Case` model, creates the hidden-instruction copy of the
+submission (`<id>-hi`) if it does not exist (an existing copy is never changed), assigns case
+ids (`case_ids` in the file, else the id of the existing case of that situation and tone, else
+the next free `dev-NNN`, so rebuilding changes nothing) and runs the validator on the output
+folder. Output folder: `<data-root>/cases/<split>`, or `--out`. For private test data use
+`--data-root data/private` and keep the files out of Git. The tool only writes data; judging
+whether the planted error, claims and answers are *correct* is still the author's job.
+
 ## Private data: test split and blind cases
 
 The test split and the blind cases never enter the repository. They live in the private

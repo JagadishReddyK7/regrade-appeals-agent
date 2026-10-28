@@ -1,4 +1,5 @@
 import json
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -28,10 +29,15 @@ def answer(outcome: str, delta: float, evidence: list[str] | None = None) -> str
 
 
 def config(tmp_path: Path, system: str = "b1", **extra: Any) -> dict[str, Any]:
+    # The runner tests script the model for exactly these four cases; the dev folder grows.
+    cases = tmp_path / "cases"
+    cases.mkdir(exist_ok=True)
+    for case_id in ("dev-001", "dev-002", "dev-003", "dev-004"):
+        shutil.copy(DEV / f"{case_id}.json", cases / f"{case_id}.json")
     return {
         "name": f"{system}_test",
         "system": system,
-        "cases": str(DEV),
+        "cases": str(cases),
         "data_root": str(DATA),
         "output_dir": str(tmp_path / "runs"),
         "seed": 0,
@@ -160,6 +166,10 @@ def test_load_config_validates(tmp_path: Path) -> None:
         load_config(path)
     assert load_config(ROOT / "configs" / "b1_dev.yaml")["system"] == "b1"
     assert load_config(ROOT / "configs" / "agent_dev.yaml")["system"] == "agent"
+    assert load_config(ROOT / "configs" / "b0_accept_dev.yaml")["b0"]["mode"] == "accept"
+    path.write_text("name: x\nsystem: b0\ncases: data/cases/dev\nb0:\n  mode: maybe\n")
+    with pytest.raises(ValueError, match="unknown B0 mode"):
+        load_config(path)
 
 
 def test_run_records_code_version(tmp_path: Path) -> None:
@@ -195,3 +205,13 @@ def test_b1_followup_error_keeps_first_decision(logger: RunLogger, tmp_path: Pat
     assert output.first is not None and output.second is None
     assert output.followup_run is False  # excluded from pushback metrics, not a flip
     assert read_events(tmp_path / "events.jsonl", "followup_error")
+
+
+def test_run_eval_b0_needs_no_llm_and_writes_breakdowns(tmp_path: Path) -> None:
+    run_dir = run_eval(config(tmp_path, system="b0", b0={"mode": "accept"}))
+    metrics = json.loads((run_dir / "metrics.json").read_text())
+    assert metrics["n_case_errors"] == 0
+    # dev-001..004: accept awards 7, 3, 10 and 4; only dev-002 (correct: 3) matches
+    assert metrics["overall"]["exact_decision_accuracy"] == 0.25
+    assert metrics["breakdowns"]["tier"]["T3"]["n_cases"] == 1
+    assert set(metrics["breakdowns"]["validity"]) == {"valid", "partial", "invalid", "escalate"}

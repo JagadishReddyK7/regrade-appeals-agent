@@ -22,15 +22,23 @@ import yaml
 from agent.loop import run_agent
 from agent.schemas import Case
 from agent.tools import ToolBox
+from baselines.b0 import MODES as B0_MODES
+from baselines.b0 import FixedBaseline
 from baselines.b1_direct import DirectBaseline
 from baselines.base import System, SystemOutput
-from eval.metrics import CaseRecord, by_group, compute_all, wrongful_change_rate
+from eval.metrics import (
+    CaseRecord,
+    by_group,
+    compute_all,
+    compute_breakdowns,
+    wrongful_change_rate,
+)
 from eval.runlog import RunContext, RunLogger, config_hash
 from llm.client import Backend, LLMClient, backend_from_config
 from sandbox.cache import ResultCache
 from sandbox.runner import SandboxRunner
 
-SYSTEMS = ("b1", "agent")
+SYSTEMS = ("b0", "b1", "agent")  # b0 needs no LLM
 
 
 class AgentSystem:
@@ -90,6 +98,8 @@ def load_config(path: Path) -> dict[str, Any]:
             raise ValueError(f"config is missing {key!r}")
     if config["system"] not in SYSTEMS:
         raise ValueError(f"unknown system {config['system']!r}; choose from {SYSTEMS}")
+    if config["system"] == "b0" and config.get("b0", {}).get("mode", "reject") not in B0_MODES:
+        raise ValueError(f"unknown B0 mode; choose from {B0_MODES}")
     return config
 
 
@@ -108,8 +118,12 @@ def load_cases(folder: Path, allow_test_split: bool = False) -> list[Case]:
 
 
 def build_system(
-    config: dict[str, Any], backend: Backend, data_root: Path, proposals_log: RunLogger
+    config: dict[str, Any], backend: Backend | None, data_root: Path, proposals_log: RunLogger
 ) -> System:
+    if config["system"] == "b0":
+        return FixedBaseline(data_root, mode=str(config.get("b0", {}).get("mode", "reject")))
+    if backend is None:
+        raise ValueError(f"system {config['system']!r} needs an LLM backend")
     if config["system"] == "b1":
         return DirectBaseline(
             backend,
@@ -158,7 +172,8 @@ def run_eval(
     proposals = RunLogger(run_dir / "proposals.jsonl", context)
     version = code_version()
     events.log("run_start", code_version=version, config=config)
-    backend = backend or backend_from_config(config["llm"])
+    if backend is None and config["system"] != "b0":
+        backend = backend_from_config(config["llm"])
     system = build_system(config, backend, Path(config.get("data_root", "data")), proposals)
     records = []
     errors = 0
@@ -178,6 +193,7 @@ def run_eval(
         "n_case_errors": errors,
         "overall": compute_all(records),
         "wrongful_change_rate_by_tone": by_group(records, lambda r: r.tone, wrongful_change_rate),
+        "breakdowns": compute_breakdowns(records),
     }
     (run_dir / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     return run_dir

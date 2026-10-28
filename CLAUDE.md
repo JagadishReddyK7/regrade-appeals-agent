@@ -41,7 +41,8 @@ search_precedents, propose_grade_change, escalate_to_ta, submit_decision.
 
 ## Repository layout
 - `data/` assignments, submissions, cases/{dev,train}; `data/validate.py`,
-  `data/grader.py` (reference grader), `data/consistency.py`, `data/formats.py`
+  `data/grader.py` (reference grader), `data/consistency.py`, `data/formats.py`,
+  `data/build_cases.py` (situation file -> four tone variants)
 - `sandbox/` sandboxed execution, test runner, result cache
 - `llm/` model client (OpenAI-compatible for vLLM, plus a mock backend), vLLM launcher,
   smoke test

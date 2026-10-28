@@ -27,9 +27,11 @@ __pycache__/
 .cache/
 sandbox/cache/
 
-# Kaggle and run outputs
+# Kaggle and run outputs (selected runs are committed under results/)
 outputs/
 runs/
+*_outputs/
+*_outputs.zip
 logs/
 /kaggle/
 .ipynb_checkpoints/

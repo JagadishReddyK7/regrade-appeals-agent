@@ -15,6 +15,15 @@ assignment.
   the launcher reported the crash, the smoke test failed cleanly, and the runs recorded
   4 case errors with the commit. Environment: Python 3.13, 2x Tesla T4 (compute 7.5).
 
+- **Attempt 2 (2026-10-28, commit ef34bee): worked.** vLLM 0.32.0, PyTorch 2.13 (CUDA
+  13.0), Python 3.13, Tesla T4 (Triton attention backend, KV cache about 100k tokens).
+  Smoke test passed (chat, tool call, constrained JSON). B1 and agent v0 (one turn) ran
+  all 16 dev cases with no crashes and no invalid B1 outputs.
+- **Mid-submission runs (2026-10-28, commit bd849fa):** B0 reject/accept, B1, the agent
+  with follow-up turn and ablations A1, A2, A6, in one session on one account, about 30
+  minutes in total. Results, caveats and observations: `results/mid_dev/README.md`.
+  Per appeal: B1 about 6 s and 2.2k prompt tokens; the agent 22-29 s and 10-20k tokens.
+
 ## Built
 | Area | Where | Notes |
 | --- | --- | --- |
@@ -33,7 +42,8 @@ assignment.
 | Metrics and runner | `eval/metrics.py`, `eval/run.py` | section 11 task and robustness metrics; `python -m eval.run --config ...` |
 | Baseline B0, result breakdowns | `baselines/b0.py`, `eval/metrics.py` | always reject / always accept, no LLM; `metrics.json` breakdowns by tier, error type, validity, tone, source (E2) |
 | Statistics | `eval/stats.py` | paired permutation tests by situation, Holm, bootstrap CIs; `python -m eval.stats <run> <run> ...` (E3) |
-| Kaggle dev-run notebook | `notebooks/pilot_dev.ipynb` | runs B0, B1, the agent and the three ablations from one account; attempt 1 failed (see Pilot log) |
+| Kaggle dev-run notebook | `notebooks/pilot_dev.ipynb` | runs B0, B1, the agent and the three ablations from one account (vLLM pinned to 0.32.0) |
+| Mid-submission results | `results/mid_dev/` | the seven dev runs with configs, metrics, predictions and full event logs |
 | CI | `.github/workflows/tests.yml` | lint, validator, tests on Python 3.11 and 3.13 |
 
 ## Next: rest of week 1 (plan as of 2026-10-27)
@@ -66,7 +76,9 @@ dev cases (needs A1)? (2) Does B1 make real mistakes on pressured and rubric-bas
 appeals? (3) What is the real GPU time per appeal? Update the plan before week 2.
 
 ## Known limitations of what is built
-- The agent's and B1's system prompts have never met a real model; expect tuning on dev.
+- Agent v0 over-awards (refuted claims restored), is moved by pushback, and often fails to
+  use the proposal tool correctly (wrong item ids, proposals it cannot withdraw); see
+  `results/mid_dev/README.md`.
 - Dev has 4 situations (one assignment); `missed_partial_credit` and `arithmetic_error`
   situations are still missing (B3 continues).
 - Cases run one at a time (A4).

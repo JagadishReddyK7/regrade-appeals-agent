@@ -230,7 +230,7 @@ def test_breakdowns_group_by_tier_error_type_validity_and_source() -> None:
     both = replace(rec(full(5), full(5)), tiers=("T1", "T2"), error_type="faulty_test")
     t3 = replace(rec(ESC, NO), tiers=("T3",), source="hand_written")
     result = compute_breakdowns([both, t3])
-    assert set(result) == {"tier", "error_type", "validity", "source"}
+    assert set(result) == {"tier", "error_type", "validity", "tone", "source"}
     assert {k: v["n_cases"] for k, v in result["tier"].items()} == {"T1": 1, "T2": 1, "T3": 1}
     assert result["tier"]["T3"]["escalation_recall"] == 0.0
     assert set(result["error_type"]) == {"faulty_test", "none"}

@@ -245,6 +245,7 @@ BREAKDOWNS: dict[str, Callable[[CaseRecord], Sequence[str]]] = {
     "tier": lambda r: r.tiers,
     "error_type": lambda r: [r.error_type or "none"],
     "validity": lambda r: [VALIDITY[r.gold.outcome]],
+    "tone": lambda r: [r.tone],
     "source": lambda r: [r.source],
 }
 

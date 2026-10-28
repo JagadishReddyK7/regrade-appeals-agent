@@ -5,7 +5,7 @@ data_root: data
 output_dir: runs
 seed: 0
 temperature: 0.0
-followup: true          # B1 only for now; the agent has no follow-up turn yet
+followup: true          # one follow-up (pushback) turn after the first decision
 llm:
   backend: openai       # an OpenAI-compatible server, e.g. vLLM on Kaggle
   base_url: http://localhost:8000/v1

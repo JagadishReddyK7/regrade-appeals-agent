@@ -26,12 +26,14 @@ assignment's spec, rubric, announcements, the grade report and the submission (n
 answer key). `LLMClient.chat(..., json_schema=DirectDecisionOutput)` -> validated ->
 `Decision`. With the follow-up enabled, the follow-up text is appended and it decides again.
 
-**Agent v0** (`AgentSystem` in `eval/run.py` -> `agent/loop.py`):
+**Agent v0** (`AgentSystem` in `eval/run.py` -> `agent/loop.py`; options and ablation
+flags come from the config through `AgentOptions.from_config`):
 ```
 AgentLoop.run()
-  messages = system prompt + appeal (assignment and submission ids only)
-  repeat until submit_decision or 10 tool calls:
-    LLMClient.chat(messages, tools=ToolBox.schemas())
+  messages = system prompt + appeal (assignment and submission ids only;
+             + the rubric when retrieval is ablated)
+  turn 1: repeat until submit_decision or max_tool_calls (10):
+    LLMClient.chat(messages, tools=tool_schemas(minus ablated tools))
     for each tool call:
       validate arguments            llm/parsing.py + agent/schemas.py (*Args models)
       ToolBox.call(name, args)      agent/tools.py
@@ -41,7 +43,8 @@ AgentLoop.run()
         propose_grade_change   -> proposals.jsonl (capped by deducted marks)
       result gets an evidence id E<n>; shortened for the model, full in the log
     submit_decision -> checked -> Decision (claim id "appeal")
-  -> AgentResult(decision | None, counters)
+  turn 2 (if followup and turn 1 decided): + follow-up text, fresh budget, same loop
+  -> AgentResult(decision, followup_decision | None, counters)
 ```
 
 ### What each part may see
@@ -70,6 +73,7 @@ AgentLoop.run()
 | `eval/metrics.py` | `Prediction`, `CaseRecord`, the section 11 metrics, `METRICS`, `compute_all`, `by_group` |
 | `eval/run.py` | config loading, `build_system`, `AgentSystem`, `run_eval`, `code_version` |
 | `eval/runlog.py` | `RunLogger`, `RunContext`, `config_hash`, `read_events` |
+| `eval/cost.py` | cost per appeal (wall time, LLM calls, latency, tokens, tool calls) |
 | `llm/client.py` | `LLMClient`, `OpenAIBackend`, `MockLLM`, `ChatResponse`, `ToolCall` |
 | `llm/parsing.py` | strict JSON parsing; `validate_output` logs `invalid_output` |
 | `llm/serve.py`, `llm/smoke.py` | start vLLM from a config; check chat, tool calls, constrained JSON |
@@ -117,9 +121,10 @@ section 7, and test it on hand-made `CaseRecord`s (see `tests/test_metrics.py`).
 Ablations A0-A7 are config flags, not code forks. Read the option from the config dict
 where the system is built (`build_system` / the system's constructor) with a default that
 keeps current behaviour, and pass it down; do not read config deep inside helpers. The
-config hash in every event changes automatically, so runs stay distinguishable. The first
-PR that adds an ablation flag should record the config layout (e.g. an `ablation:` section)
-in `docs/DECISIONS.md`.
+config hash in every event changes automatically, so runs stay distinguishable. Agent
+ablations live in the `ablation:` section and are parsed by `AgentOptions.from_config` in
+`agent/loop.py`: add the flag to `ABLATION_FLAGS` and `AgentOptions`, add a
+`configs/agent_<flag>_dev.yaml`, and record it in `docs/DECISIONS.md` section 10.
 
 **Add benchmark data**
 See `docs/DATA_FORMAT.md`; run `python -m data.validate` before committing.

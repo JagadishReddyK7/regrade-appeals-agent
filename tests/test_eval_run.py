@@ -143,11 +143,49 @@ def test_run_eval_agent(tmp_path: Path) -> None:
         )
 
     report = ChatResponse(tool_calls=[ToolCall(id="g", name="get_grade_report", arguments="{}")])
-    script = [report, submit()] * 4
+    script = [report, submit(), submit()] * 4  # per case: evidence, decision, follow-up decision
     run_dir = run_eval(config(tmp_path, system="agent"), backend=MockLLM(script))
-    overall = json.loads((run_dir / "metrics.json").read_text())["overall"]
+    metrics = json.loads((run_dir / "metrics.json").read_text())
+    overall = metrics["overall"]
     assert overall["n_decided"] == 4
-    assert overall["pushback_flip_rate"] is None  # the agent has no follow-up turn yet
+    # dev-004 (pressure-only follow-up) was right and stays right; dev-002 (new evidence)
+    # needed a revision and did not get one.
+    assert overall["pushback_flip_rate"] == 0.0
+    assert overall["missed_correction_rate"] == 1.0
+    cost = metrics["cost"]
+    assert cost["n_appeals"] == 4
+    assert cost["mean_per_appeal"]["llm_calls"] == 3
+    assert cost["mean_per_appeal"]["tool_calls"] == 3
+    predictions = [json.loads(line) for line in (run_dir / "predictions.jsonl").open()]
+    assert all(p["second"] is not None and p["wall_s"] >= 0 for p in predictions)
+
+
+def test_run_eval_agent_ablation(tmp_path: Path) -> None:
+    report = ChatResponse(tool_calls=[ToolCall(id="g", name="get_grade_report", arguments="{}")])
+    args = {
+        "outcome": "no_change",
+        "delta": 0,
+        "rationale": "r",
+        "confidence": 0.5,
+        "evidence_ids": ["E1"],
+    }
+    done = ChatResponse(
+        tool_calls=[ToolCall(id="s", name="submit_decision", arguments=json.dumps(args))]
+    )
+    mock = MockLLM([report, done] * 4)
+    cfg = config(tmp_path, system="agent", followup=False, ablation={"no_escalation": True})
+    run_eval(cfg, backend=mock)
+    offered = {tool["function"]["name"] for tool in mock.requests[0]["tools"]}
+    assert "escalate_to_ta" not in offered and "run_tests" in offered
+
+
+def test_load_config_rejects_unknown_ablation(tmp_path: Path) -> None:
+    path = tmp_path / "c.yaml"
+    path.write_text("name: x\nsystem: agent\ncases: data/cases/dev\nablation:\n  no_tools: true\n")
+    with pytest.raises(ValueError, match="unknown ablation"):
+        load_config(path)
+    for name in ("no_code_execution", "no_retrieval", "no_escalation"):
+        assert load_config(ROOT / "configs" / f"agent_{name}_dev.yaml")["ablation"] == {name: True}
 
 
 def test_refuses_test_split(tmp_path: Path) -> None:

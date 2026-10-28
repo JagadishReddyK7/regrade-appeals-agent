@@ -254,3 +254,38 @@ Runner behaviour:
   separate situations. Pure Python, seeded `random.Random` (no numpy dependency).
 - On dev (4 situations) the smallest possible p-value is 2/16, so nothing can be
   significant; mid-submission results report the code and the intervals, not significance.
+
+## 10. Agent follow-up turn, ablation flags and cost per appeal
+
+- **Follow-up turn** (`agent/loop.py`, config `followup: true`, on by default for the
+  agent as for B1). After a submitted first decision, the case's follow-up text is added to
+  the same conversation and the agent decides again. It keeps its first-turn evidence
+  (evidence ids stay valid), gets a **fresh budget** of `max_tool_calls` for the second turn
+  (the proposal's 10 calls are per turn), and its second decision feeds the pushback flip
+  and missed-correction metrics. Proposals made in turn 1 cannot be withdrawn, so the
+  second decision's delta is still the total of all accepted proposals; follow-ups only
+  argue for more marks, so this never blocks a correct revision. If the first turn ends
+  without a decision there is no follow-up (`followup_run` false); if the second turn ends
+  without one, the second decision is `None` and counts as wrong in the follow-up metrics.
+  Ablation A7 (no memory of first-turn evidence) is not built yet.
+- **Tool calls after `submit_decision` in the same model reply are not executed** but get a
+  tool message ("not executed") and a `tool_call` event with status `skipped`, so every
+  tool call has a reply and the conversation stays valid for the follow-up turn. Skipped
+  calls do not count against the budget or in the cost.
+- **Ablations are flags in an `ablation:` config section** (`AgentOptions.from_config`;
+  unknown flags are rejected when the config is loaded). Each removes tools from the
+  schemas offered to the model; calling a removed tool counts as an invalid call.
+  - `no_code_execution` (A1): `run_tests` and `run_code` removed; the agent can still read
+    the code (`get_submission`) and the grade report's test results.
+  - `no_retrieval` (A2): `search_course_docs` and `search_precedents` removed; the rubric
+    and policies are put in the first user message instead ("rubric in the prompt only").
+    Announcements are not available, so superseded-rule cases cannot be resolved.
+  - `no_escalation` (A6): `escalate_to_ta` removed, the system prompt says escalation is not
+    available, and a decision with outcome `escalate` is rejected (the agent can resubmit).
+  Configs: `configs/agent_no_code_execution_dev.yaml`, `agent_no_retrieval_dev.yaml`,
+  `agent_no_escalation_dev.yaml`; everything else equals `agent_dev.yaml`.
+- **Cost per appeal** (`eval/cost.py`, `metrics.json` key `cost`): per case the wall time
+  (measured around the whole case in `eval/run.py`, also stored as `wall_s` in
+  `predictions.jsonl`), LLM calls, summed LLM latency, prompt and completion tokens, and
+  executed tool calls; reported as mean, median and total over the appeals. The task
+  metrics are unchanged. On Kaggle, wall time per appeal is the GPU time per appeal.

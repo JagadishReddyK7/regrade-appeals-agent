@@ -1,0 +1,27 @@
+name: agent_no_escalation_dev
+system: agent
+cases: data/cases/dev
+data_root: data
+output_dir: runs
+seed: 0
+temperature: 0.0
+followup: true          # one follow-up (pushback) turn after the first decision
+llm:
+  backend: openai       # an OpenAI-compatible server, e.g. vLLM on Kaggle
+  base_url: http://localhost:8000/v1
+  model: Qwen/Qwen2.5-7B-Instruct-AWQ
+  timeout_s: 120
+  serve:                # how llm.serve starts vLLM (Kaggle T4: float16, no bfloat16)
+    gpu: 0
+    port: 8000
+    dtype: half
+    quantization: awq
+    max_model_len: 16384
+    gpu_memory_utilization: 0.85
+    tool_call_parser: hermes
+agent:
+  max_tool_calls: 10
+sandbox:
+  cache_dir: sandbox/cache
+ablation:                # A6: escalate_to_ta removed; the agent must decide every appeal
+  no_escalation: true

@@ -15,6 +15,7 @@ evidence supports one, and escalates unclear cases to a TA.
 | `docs/ARCHITECTURE.md` | how the code fits together and how to extend it |
 | `docs/DECISIONS.md` | design decisions and open questions; read before changing anything |
 | `docs/DATA_FORMAT.md` | how to write assignments, submissions and cases |
+| `docs/VERIFIER_PLAN.md` | claim verifier: design, training-data plan, timeline |
 | `docs/IMPLEMENTATION_GUIDE.md` | setup, team workflow and rules, Claude Code usage, prompts for next tasks |
 | `CLAUDE.md` | rules Claude Code follows in this repo (useful for humans too) |
 
@@ -58,9 +59,9 @@ runs the dev configs.
 | `eval/` | metrics, run log, evaluation runner |
 | `llm/` | model client, vLLM launcher, smoke test |
 | `notebooks/` | thin Kaggle notebooks |
-| `retrieval/` | course-document search |
+| `retrieval/` | course-document search, precedent store |
 | `sandbox/` | sandboxed code execution with limits and a result cache |
-| `verifier/` | (to come) training data and QLoRA verifier |
+| `verifier/` | verifier prompt format, dummy data, QLoRA training (`pip install -e ".[gpu]"`, Kaggle) |
 | `tests/` | pytest suite |
 
 ## Private test data

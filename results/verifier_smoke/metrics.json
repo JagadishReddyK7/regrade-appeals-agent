@@ -1,0 +1,14 @@
+{
+  "run_id": "verifier_smoke-20261029-171202-84eb61",
+  "examples": 50,
+  "too_long": 0,
+  "trainable_parameters": 7372800,
+  "steps": 10,
+  "first_loss": 1.2991032600402832,
+  "last_loss": 0.11854729056358337,
+  "train_seconds": 12.139436086999922,
+  "peak_gpu_memory_gb": 3.996163072,
+  "check_valid_json": 6,
+  "check_correct": 6,
+  "check_total": 6
+}

@@ -38,7 +38,8 @@ AgentLoop.run()
       validate arguments            llm/parsing.py + agent/schemas.py (*Args models)
       ToolBox.call(name, args)      agent/tools.py
         run_tests / run_code   -> sandbox/runner.py SandboxRunner (subprocess + cache)
-        search_course_docs     -> retrieval/course_docs.py (BM25)
+        search_course_docs     -> retrieval/course_docs.py (BM25, in-force first)
+        search_precedents      -> retrieval/precedents.py (configured store or empty)
         get_grade_report etc.  -> data/formats.py loaders
         propose_grade_change   -> proposals.jsonl (capped by deducted marks)
       result gets an evidence id E<n>; shortened for the model, full in the log
@@ -77,7 +78,10 @@ AgentLoop.run()
 | `llm/client.py` | `LLMClient`, `OpenAIBackend`, `MockLLM`, `ChatResponse`, `ToolCall` |
 | `llm/parsing.py` | strict JSON parsing; `validate_output` logs `invalid_output` |
 | `llm/serve.py`, `llm/smoke.py` | start vLLM from a config; check chat, tool calls, constrained JSON |
-| `retrieval/course_docs.py` | `CourseDocIndex` (BM25 over spec sections, rubric items, announcements) |
+| `retrieval/course_docs.py` | `CourseDocIndex` (BM25 over spec sections, rubric items, announcements; the announcement in force first) |
+| `retrieval/precedents.py` | `Precedent`, `PrecedentStore` (JSONL, BM25 per assignment) |
+| `verifier/format.py` | verifier prompt and answer format, evidence bundles |
+| `verifier/train.py`, `verifier/dummy_data.py` | QLoRA training (GPU), dummy examples |
 | `sandbox/runner.py`, `sandbox/harness.py` | `SandboxRunner.run_test` / `run_code`; the child process that applies limits and blocks |
 | `sandbox/cache.py`, `sandbox/result.py` | result cache; `RunResult` |
 

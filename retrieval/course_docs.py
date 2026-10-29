@@ -76,6 +76,33 @@ class CourseDocIndex:
         return cls([*spec_docs(folder), *rubric_docs(folder), *announcement_docs(folder)])
 
     def search(self, query: str, k: int = 3) -> list[CourseDoc]:
+        """Top-k documents by BM25. An announcement that a later one supersedes always
+        comes right after the announcement now in force, even if that one scored lower,
+        so the rule in force is seen first."""
         scores = self._bm25.get_scores(tokenize(query))
         ranked = sorted(range(len(self.docs)), key=lambda i: (-scores[i], i))
-        return [self.docs[i] for i in ranked[:k] if scores[i] > 0]
+        hits = [self.docs[i] for i in ranked if scores[i] > 0]
+        return in_force_first(hits, self.docs)[:k]
+
+
+def in_force(doc: CourseDoc, by_id: dict[str, CourseDoc]) -> CourseDoc:
+    """The announcement currently in force in doc's supersession chain."""
+    seen = {doc.doc_id}
+    while doc.superseded_by is not None:
+        newer = by_id.get(f"announcement:{doc.superseded_by}")
+        if newer is None or newer.doc_id in seen:
+            break
+        seen.add(newer.doc_id)
+        doc = newer
+    return doc
+
+
+def in_force_first(hits: list[CourseDoc], all_docs: list[CourseDoc]) -> list[CourseDoc]:
+    by_id = {d.doc_id: d for d in all_docs}
+    ordered: list[CourseDoc] = []
+    for doc in hits:
+        current = in_force(doc, by_id)
+        for item in (current, doc):
+            if item not in ordered:
+                ordered.append(item)
+    return ordered

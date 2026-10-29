@@ -216,3 +216,60 @@ class DirectDecisionOutput(StrictModel):
     rationale: str = NonEmptyStr
     confidence: float = Field(ge=0, le=1)
     evidence_ids: list[str] = Field(min_length=1)
+
+
+# --- Claim verifier (input: evidence bundle; output: verdict) -----------------------------
+
+
+class EvidenceItem(StrictModel):
+    id: str = NonEmptyStr  # the agent's evidence id, e.g. "E3"
+    source: str = NonEmptyStr  # the tool that produced it, e.g. "run_tests"
+    text: str = NonEmptyStr  # the tool output as shown to the verifier (shortened)
+
+
+class EvidenceBundle(StrictModel):
+    """What the verifier sees for one claim: the claim exactly as the student wrote it
+    (tone included), the item it disputes if known, and the evidence gathered for it."""
+
+    claim: str = NonEmptyStr
+    target: str | None = None  # test id, rubric:..., policy:... or total
+    evidence: list[EvidenceItem] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _unique_evidence_ids(self) -> "EvidenceBundle":
+        ids = [item.id for item in self.evidence]
+        if len(ids) != len(set(ids)):
+            raise ValueError(f"duplicate evidence ids: {ids}")
+        return self
+
+
+class VerifierOutput(StrictModel):
+    """The verifier's answer: a verdict and the evidence item it relies on (None only for
+    needs_human)."""
+
+    verdict: Verdict
+    evidence_id: str | None = None
+
+    @model_validator(mode="after")
+    def _decided_verdict_cites_evidence(self) -> "VerifierOutput":
+        if self.verdict != "needs_human" and self.evidence_id is None:
+            raise ValueError(f"verdict {self.verdict!r} must cite an evidence id")
+        return self
+
+
+class VerifierExample(StrictModel):
+    """One training or evaluation example for the verifier (JSONL, one per line)."""
+
+    example_id: str = NonEmptyStr
+    bundle: EvidenceBundle
+    label: VerifierOutput
+    tone: Tone
+    assignment: str = NonEmptyStr
+    pair_id: str | None = None  # links the tone variants of one claim and evidence
+
+    @model_validator(mode="after")
+    def _label_cites_bundle_evidence(self) -> "VerifierExample":
+        known = {item.id for item in self.bundle.evidence}
+        if self.label.evidence_id is not None and self.label.evidence_id not in known:
+            raise ValueError(f"label cites unknown evidence id {self.label.evidence_id!r}")
+        return self

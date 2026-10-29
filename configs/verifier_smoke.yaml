@@ -1,0 +1,15 @@
+name: verifier_smoke
+model: Qwen/Qwen2.5-3B-Instruct
+data: runs/verifier_dummy.jsonl   # written by `python -m verifier.dummy_data`
+output_dir: runs
+seed: 0
+max_steps: 10                     # smoke test: does training run on a T4?
+batch_size: 2
+learning_rate: 2.0e-4
+max_length: 1024
+check_examples: 6
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules: [q_proj, k_proj, v_proj, o_proj]

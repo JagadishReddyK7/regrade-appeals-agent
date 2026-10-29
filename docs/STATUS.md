@@ -24,6 +24,11 @@ assignment.
   minutes in total. Results, caveats and observations: `results/mid_dev/README.md`.
   Per appeal: B1 about 6 s and 2.2k prompt tokens; the agent 22-29 s and 10-20k tokens.
 
+- **Verifier smoke test (2026-10-29, commit e74a8cf): passed.** Qwen2.5-3B in 4-bit with
+  LoRA trained 10 steps on 50 dummy examples in 12 s, peak GPU memory 4.0 GB, loss 1.30 to
+  0.12; generated answers parse and match. Shows the pipeline runs, not verifier quality
+  (`results/verifier_smoke/README.md`).
+
 ## Built
 | Area | Where | Notes |
 | --- | --- | --- |
@@ -38,7 +43,9 @@ assignment.
 | vLLM launcher and smoke test | `llm/serve.py`, `llm/smoke.py` | checks chat, tool calls, constrained JSON |
 | Agent v0 | `agent/tools.py`, `agent/loop.py` | 9 tools, 10-call budget per turn, evidence ids, proposal cap, follow-up turn, ablation flags A1/A2/A6; no claim splitting |
 | Cost per appeal | `eval/cost.py` | wall time, LLM calls, latency, tokens, tool calls in `metrics.json` (`cost`) |
-| Course-doc search | `retrieval/course_docs.py` | BM25; announcements carry date and `superseded_by` |
+| Course-doc search | `retrieval/course_docs.py` | BM25; announcements carry date and `superseded_by`; the announcement in force ranks first (R2) |
+| Precedent store | `retrieval/precedents.py` | JSONL store, BM25 search per assignment, wired to `search_precedents` via config; empty in all runs so far (R2) |
+| Verifier format and training | `agent/schemas.py`, `verifier/` | evidence bundle (R1), prompt, dummy data, QLoRA training script, Kaggle smoke notebook (R3); smoke test passed on a T4 (`results/verifier_smoke/`); not trained on real data; see `docs/VERIFIER_PLAN.md` |
 | Baseline B1 | `baselines/b1_direct.py` | one prompt, JSON decision, follow-up turn |
 | Metrics and runner | `eval/metrics.py`, `eval/run.py` | section 11 task and robustness metrics; `python -m eval.run --config ...` |
 | Baseline B0, result breakdowns | `baselines/b0.py`, `eval/metrics.py` | always reject / always accept, no LLM; `metrics.json` breakdowns by tier, error type, validity, tone, source (E2) |
@@ -83,7 +90,8 @@ appeals? (3) What is the real GPU time per appeal? Update the plan before week 2
 - Dev has 4 situations (one assignment); `missed_partial_credit` and `arithmetic_error`
   situations are still missing (B3 continues).
 - Cases run one at a time (A4).
-- Ablations A0, A3, A4, A5 and A7 are not built (they need claim splitting, precedents or the verifier).
+- Ablations A0, A3, A4, A5 and A7 are not built (they need claim splitting, filled precedents or the trained verifier).
+- The precedent store is empty in all runs; the verifier is not in the pipeline yet.
 - The full test suite takes about 30-60 s on Windows (many sandbox subprocesses).
 
 ## Later (weeks 2-8)

@@ -173,7 +173,8 @@ Formats are described in `docs/DATA_FORMAT.md`; this section records why they lo
   This is the whole-appeal setting of ablation A0 and baseline B3.
 - **Tool results are shortened before the model sees them** (at most 5,000 characters;
   long fields keep their start and end). The log and the evidence keep the full output.
-- **`search_precedents` returns an empty list** until the precedent store exists.
+- **`search_precedents` returns an empty list** unless a precedent store is configured
+  (section 11).
 
 ## 6. Baseline B1
 
@@ -306,3 +307,31 @@ Runner behaviour:
   `predictions.jsonl`), LLM calls, summed LLM latency, prompt and completion tokens, and
   executed tool calls; reported as mean, median and total over the appeals. The task
   metrics are unchanged. On Kaggle, wall time per appeal is the GPU time per appeal.
+
+## 11. Retrieval and verifier (R1-R3, mid-submission)
+
+- **In-force announcements first** (`retrieval/course_docs.py`): when course-doc search
+  returns an announcement that a later one supersedes, the announcement now in force is
+  placed directly before it, even if it scored lower or did not match the query. This
+  changes what `search_course_docs` returns compared with the mid-submission runs
+  (`results/mid_dev/`, recorded at commit bd849fa).
+- **Precedent store** (`retrieval/precedents.py`): past decisions as JSON lines
+  (`Precedent`: id, assignment, target, neutral issue text, outcome, delta, rationale),
+  searched with BM25 over issue, target and rationale within the same assignment; a result
+  must share a word with the query. BM25Plus is used because BM25Okapi's scores collapse
+  in a store of a few documents. `search_precedents` uses the store named by
+  `retrieval: {precedents: <file.jsonl>}` in the config; without it the store is empty,
+  as in all runs so far. Filling it (team-written precedents, the agent's own decisions
+  for RQ2) is still to do.
+- **BM25 only for now**; the embedding model from the proposal is a final-submission
+  task (another dependency and a model download).
+- **Evidence bundle and verifier format** (`agent/schemas.py`, `verifier/format.py`): see
+  `docs/VERIFIER_PLAN.md`. The verifier answers JSON with a verdict and the evidence id it
+  relies on; one prompt function serves training and inference.
+- **QLoRA libraries are an optional `gpu` extra** (`transformers`, `peft`, `bitsandbytes`,
+  `accelerate`), installed only on Kaggle; team-approved. `trl` and `datasets` are not
+  needed: `verifier/train.py` uses a short custom loop, which also avoids `trl`'s frequent
+  API changes. The GPU imports are inside `train()`, so tests and CI do not need them.
+- **The verifier is trained on the answer tokens only**; examples longer than
+  `max_length` are skipped and counted, never truncated (cutting the prompt would drop
+  the claim or evidence).

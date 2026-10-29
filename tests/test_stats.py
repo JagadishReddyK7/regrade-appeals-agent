@@ -140,8 +140,11 @@ def test_bootstrap_keeps_redrawn_situations_apart() -> None:
 
 
 def test_compare_two_b0_runs(tmp_path: Path) -> None:
+    # Pinned to the first four situations; the dev folder keeps growing.
     cases = tmp_path / "cases"
-    shutil.copytree(DEV, cases)
+    cases.mkdir()
+    for n in range(1, 17):
+        shutil.copy(DEV / f"dev-{n:03d}.json", cases / f"dev-{n:03d}.json")
     common = {"system": "b0", "cases": str(cases), "data_root": str(ROOT / "data")}
     out = str(tmp_path / "runs")
     accept = run_eval({**common, "name": "accept", "output_dir": out, "b0": {"mode": "accept"}})

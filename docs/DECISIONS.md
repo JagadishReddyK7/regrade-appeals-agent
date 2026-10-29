@@ -142,6 +142,12 @@ Formats are described in `docs/DATA_FORMAT.md`; this section records why they lo
   (CUDA 12.8) then crashed the server at start-up, because transformers imports it.
   vLLM does not need torchaudio, so the notebook uninstalls it. The notebook now stops
   at the first failure (server or smoke test) and saves `vllm.log` to the outputs.
+- **vLLM is pinned to 0.32.0** in the notebook (`VLLM_SPEC`), the version that worked in
+  pilot attempt 2 and the mid-submission runs, so a new release cannot change or break a
+  run. Adding it to `pyproject.toml` as an optional extra is still open (question 2).
+- **Selected runs are committed under `results/`** (one folder per occasion, run folders
+  directly inside it, since `runs/` is gitignored). Raw Kaggle output folders
+  (`*_outputs/`) stay ignored. Only dev runs are committed; test-split runs never are.
 
 ## 5. Agent (v0: tool loop without claim splitting)
 

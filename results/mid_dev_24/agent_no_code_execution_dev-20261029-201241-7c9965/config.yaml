@@ -1,0 +1,27 @@
+name: agent_no_code_execution_dev
+system: agent
+cases: data/cases/dev
+data_root: data
+output_dir: runs
+seed: 0
+temperature: 0.0
+followup: true
+llm:
+  backend: openai
+  base_url: http://localhost:8000/v1
+  model: Qwen/Qwen2.5-7B-Instruct-AWQ
+  timeout_s: 120
+  serve:
+    gpu: 0
+    port: 8000
+    dtype: half
+    quantization: awq
+    max_model_len: 16384
+    gpu_memory_utilization: 0.85
+    tool_call_parser: hermes
+agent:
+  max_tool_calls: 10
+sandbox:
+  cache_dir: sandbox/cache
+ablation:
+  no_code_execution: true

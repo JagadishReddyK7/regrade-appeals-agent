@@ -1,0 +1,8 @@
+name: b0_reject_dev
+system: b0
+cases: data/cases/dev
+data_root: data
+output_dir: runs
+seed: 0
+b0:
+  mode: reject

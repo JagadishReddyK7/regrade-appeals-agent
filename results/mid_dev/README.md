@@ -14,9 +14,11 @@ fails; they do not rank the systems. The dev set is also where prompts are desig
 is not a held-out evaluation.
 
 **Since these runs** the dev set grew to 24 cases (situations 5 and 6: missed partial
-credit and an arithmetic error), which no system has been run on yet, and course-doc
-search now ranks the announcement in force first. The code at commit `bd849fa` reproduces
-these runs.
+credit and an arithmetic error), course docs gained announcement A3, and course-doc search
+now ranks the
+announcement in force first. The code at commit `bd849fa` reproduces these runs. **The
+24-case runs in `results/mid_dev_24/` supersede these as the main mid-submission
+result.**
 
 **Rescored 2026-10-30:** the follow-up metrics now judge correctness by marks and
 escalation, not the outcome label (`docs/DECISIONS.md` section 7). Each run folder keeps its

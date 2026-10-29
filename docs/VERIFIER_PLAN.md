@@ -1,8 +1,8 @@
 # Claim verifier: design, training data and plan
 
 Status (mid-submission): the input/output format, the prompt, a dummy-data generator and
-the QLoRA training script are built and tested on CPU; `notebooks/verifier_smoke.ipynb`
-checks that training runs on a Kaggle T4. The verifier is not yet trained on real data and
+the QLoRA training script are built and tested; the Kaggle smoke test passed on a T4
+(10 steps in 12 s, 4.0 GB peak GPU memory; `results/verifier_smoke/README.md`). The verifier is not yet trained on real data and
 not yet part of the agent's pipeline.
 
 ## Role in the system (proposal section 7)
@@ -65,7 +65,7 @@ authority tone, hand-written appeals and the other generator's appeals.
 
 | When | Step |
 | --- | --- |
-| Oct 30 | smoke test on Kaggle (training pipeline runs) |
+| Oct 29 | smoke test on Kaggle: passed (training pipeline runs) |
 | Nov 1-4 | training-data generator on the training-only assignments; first real training run |
 | Nov 4-7 | claim extractor and aggregator; verifier inside the pipeline |
 | Nov 7-10 | ablations A4 and A5; verifier evaluation on held-out tone and generator |

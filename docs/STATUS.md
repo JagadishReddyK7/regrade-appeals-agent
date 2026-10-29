@@ -24,6 +24,11 @@ assignment.
   minutes in total. Results, caveats and observations: `results/mid_dev/README.md`.
   Per appeal: B1 about 6 s and 2.2k prompt tokens; the agent 22-29 s and 10-20k tokens.
 
+- **Verifier smoke test (2026-10-29, commit e74a8cf): passed.** Qwen2.5-3B in 4-bit with
+  LoRA trained 10 steps on 50 dummy examples in 12 s, peak GPU memory 4.0 GB, loss 1.30 to
+  0.12; generated answers parse and match. Shows the pipeline runs, not verifier quality
+  (`results/verifier_smoke/README.md`).
+
 ## Built
 | Area | Where | Notes |
 | --- | --- | --- |
@@ -40,7 +45,7 @@ assignment.
 | Cost per appeal | `eval/cost.py` | wall time, LLM calls, latency, tokens, tool calls in `metrics.json` (`cost`) |
 | Course-doc search | `retrieval/course_docs.py` | BM25; announcements carry date and `superseded_by`; the announcement in force ranks first (R2) |
 | Precedent store | `retrieval/precedents.py` | JSONL store, BM25 search per assignment, wired to `search_precedents` via config; empty in all runs so far (R2) |
-| Verifier format and training | `agent/schemas.py`, `verifier/` | evidence bundle (R1), prompt, dummy data, QLoRA training script, Kaggle smoke notebook (R3); not trained on real data; see `docs/VERIFIER_PLAN.md` |
+| Verifier format and training | `agent/schemas.py`, `verifier/` | evidence bundle (R1), prompt, dummy data, QLoRA training script, Kaggle smoke notebook (R3); smoke test passed on a T4 (`results/verifier_smoke/`); not trained on real data; see `docs/VERIFIER_PLAN.md` |
 | Baseline B1 | `baselines/b1_direct.py` | one prompt, JSON decision, follow-up turn |
 | Metrics and runner | `eval/metrics.py`, `eval/run.py` | section 11 task and robustness metrics; `python -m eval.run --config ...` |
 | Baseline B0, result breakdowns | `baselines/b0.py`, `eval/metrics.py` | always reject / always accept, no LLM; `metrics.json` breakdowns by tier, error type, validity, tone, source (E2) |

@@ -20,6 +20,12 @@ dev = [
     "pytest>=8",
     "ruff>=0.5",
 ]
+gpu = [  # Kaggle only: QLoRA verifier training (verifier/train.py)
+    "transformers>=4.45",
+    "peft>=0.13",
+    "bitsandbytes>=0.44",
+    "accelerate>=1.0",
+]
 
 [tool.setuptools]
 packages = ["sandbox", "llm", "agent", "retrieval", "verifier", "baselines", "eval"]

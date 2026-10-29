@@ -36,6 +36,7 @@ from eval.metrics import (
 )
 from eval.runlog import RunContext, RunLogger, config_hash, read_events
 from llm.client import Backend, LLMClient, backend_from_config
+from retrieval.precedents import PrecedentStore
 from sandbox.cache import ResultCache
 from sandbox.runner import SandboxRunner
 
@@ -58,6 +59,7 @@ class AgentSystem:
         self.runner = runner
         self.proposals_log = proposals_log
         self.options = AgentOptions.from_config(config)
+        self.precedents = load_precedents(config)
         self.temperature = float(config.get("temperature", 0.0))
         self.seed = int(config.get("seed", 0))
 
@@ -68,6 +70,7 @@ class AgentSystem:
             case.submission,
             self.runner,
             self.proposals_log.for_case(case.case_id),
+            precedents=self.precedents,
         )
         client = LLMClient(self.backend, logger)
         result = run_agent(
@@ -84,6 +87,13 @@ class AgentSystem:
             second=result.followup_decision,
             followup_run=result.followup_run,
         )
+
+
+def load_precedents(config: dict[str, Any]) -> PrecedentStore:
+    """The precedent store named by `retrieval.precedents` in the config (a JSONL file),
+    or an empty store."""
+    path = (config.get("retrieval") or {}).get("precedents")
+    return PrecedentStore.load(Path(path)) if path else PrecedentStore()
 
 
 def code_version(repo: Path | None = None) -> dict[str, Any]:

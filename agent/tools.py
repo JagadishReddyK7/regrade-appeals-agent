@@ -30,6 +30,7 @@ from data.formats import Assignment, load_assignment, load_grade_report
 from data.grader import deducted_marks, tests_path
 from eval.runlog import RunLogger
 from retrieval.course_docs import CourseDocIndex
+from retrieval.precedents import PrecedentStore
 from sandbox.result import RunResult
 from sandbox.runner import SandboxRunner
 
@@ -127,6 +128,7 @@ class ToolBox:
         runner: SandboxRunner,
         proposals_log: RunLogger,
         failures: dict[str, int] | None = None,
+        precedents: PrecedentStore | None = None,
     ) -> None:
         self.folder = data_root / "assignments" / assignment_id
         self.submission_dir = data_root / "submissions" / submission_id
@@ -137,6 +139,7 @@ class ToolBox:
         self.proposals_log = proposals_log
         self.failures = dict(failures or {})  # tool name -> number of injected failures
         self.docs = CourseDocIndex.for_assignment(self.folder)
+        self.precedents = precedents or PrecedentStore()
         self.deducted = deducted_marks(self.assignment, self.report)
         self.proposed: dict[str, float] = {}
         self._handlers: dict[str, Callable[[Any], dict[str, Any]]] = {
@@ -190,7 +193,10 @@ class ToolBox:
         return {"documents": [doc.to_dict() for doc in self.docs.search(args.query, args.k)]}
 
     def search_precedents(self, args: SearchArgs) -> dict[str, Any]:
-        return {"precedents": [], "note": "no precedents available"}
+        found = self.precedents.search(args.query, self.assignment.id, args.k)
+        if not found:
+            return {"precedents": [], "note": "no matching precedents"}
+        return {"precedents": [p.model_dump() for p in found]}
 
     def propose_grade_change(self, args: ProposeGradeChangeArgs) -> dict[str, Any]:
         available = self.deducted.get(args.item_id, 0.0) - self.proposed.get(args.item_id, 0.0)

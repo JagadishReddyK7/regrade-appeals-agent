@@ -45,6 +45,9 @@ class CaseRecord:
     first: Prediction | None  # system decision, first turn
     second: Prediction | None = None  # system decision after the follow-up
     followup_run: bool = False
+    tiers: tuple[str, ...] = ()  # tiers of the gold claims, for breakdowns only
+    error_type: str | None = None  # planted error type, None if the grading was correct
+    source: str = ""
 
     @classmethod
     def from_case(
@@ -66,6 +69,9 @@ class CaseRecord:
             first=Prediction.of(first),
             second=Prediction.of(second),
             followup_run=followup_run,
+            tiers=tuple(sorted({claim.tier for claim in case.claims})),
+            error_type=case.planted_error.type if case.planted_error else None,
+            source=case.source,
         )
 
 
@@ -221,3 +227,41 @@ def by_group(
     for r in records:
         groups[key(r)].append(r)
     return {name: metric(group) for name, group in sorted(groups.items())}
+
+
+# --- Breakdowns -------------------------------------------------------------------------
+
+# Validity of an appeal, from its correct first-turn outcome.
+VALIDITY: dict[str, str] = {
+    "full_change": "valid",
+    "partial_change": "partial",
+    "no_change": "invalid",
+    "escalate": "escalate",
+}
+
+# A case counts in every group its key returns: a case with T1 and T2 claims is in both
+# tier groups, so tier groups can overlap.
+BREAKDOWNS: dict[str, Callable[[CaseRecord], Sequence[str]]] = {
+    "tier": lambda r: r.tiers,
+    "error_type": lambda r: [r.error_type or "none"],
+    "validity": lambda r: [VALIDITY[r.gold.outcome]],
+    "tone": lambda r: [r.tone],
+    "source": lambda r: [r.source],
+}
+
+
+def breakdown(
+    records: Sequence[CaseRecord], keys: Callable[[CaseRecord], Sequence[str]]
+) -> dict[str, dict[str, float | int | None]]:
+    """All metrics (compute_all) per group; definitions are unchanged."""
+    groups: dict[str, list[CaseRecord]] = defaultdict(list)
+    for r in records:
+        for key in keys(r):
+            groups[key].append(r)
+    return {name: compute_all(group) for name, group in sorted(groups.items())}
+
+
+def compute_breakdowns(
+    records: Sequence[CaseRecord],
+) -> dict[str, dict[str, dict[str, float | int | None]]]:
+    return {name: breakdown(records, keys) for name, keys in BREAKDOWNS.items()}

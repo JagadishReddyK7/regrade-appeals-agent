@@ -11,9 +11,10 @@ Format: what was decided, then why.
 
 ## 1. Repository and tooling
 
-- **Python 3.11 is the target; newer versions are fine for development.**
+- **Python 3.11 is the minimum; newer versions are fine.**
   `requires-python = ">=3.11"`, ruff targets py311, and CI tests 3.11 and 3.13.
-  Kaggle runs 3.11; ruff catches newer syntax, CI catches newer library calls.
+  The first pilot showed Kaggle's image runs Python 3.13 (it was assumed to be 3.11);
+  CI already covers it.
 - **The repository is public, including `docs/proposal.pdf`.** Intended by the team.
   Consequence: test-split data must never be committed (see 2.10).
 - **`CLAUDE.md` and `.claude/settings.json` are committed.** Every teammate's Claude Code
@@ -136,6 +137,12 @@ Formats are described in `docs/DATA_FORMAT.md`; this section records why they lo
   (T4 has no bfloat16), hermes tool-call parser, `max_model_len` 16384 (fits 10 capped
   tool results; costs little KV-cache memory on a T4).
 
+- **Kaggle environment (pilot attempt 1, 2026-10-27).** `pip install vllm` gave vLLM
+  0.32.0 with PyTorch 2.13 built for CUDA 13.0. Kaggle's preinstalled torchaudio
+  (CUDA 12.8) then crashed the server at start-up, because transformers imports it.
+  vLLM does not need torchaudio, so the notebook uninstalls it. The notebook now stops
+  at the first failure (server or smoke test) and saves `vllm.log` to the outputs.
+
 ## 5. Agent (v0: tool loop without claim splitting)
 
 - **Tools see only what a TA would see**: the submission, the grade report as given, the
@@ -215,3 +222,81 @@ Runner behaviour:
    the tool, so nothing reaches the TA log. Require the call?
 7. **Concurrency**: cases run one after another; the GPU budget assumes several appeals in
    parallel so vLLM can batch them.
+
+## 8. Baseline B0 and result breakdowns (E2)
+
+- **B0 has two fixed policies** (`baselines/b0.py`, config `b0: {mode: reject|accept}`,
+  configs `b0_reject_dev.yaml` and `b0_accept_dev.yaml`); it needs no LLM.
+  `reject` always answers `no_change`. `accept` believes the appeal: it restores every mark
+  the grade report deducted on the items the appeal text names (test id, rubric or policy
+  name with or without underscores, or "total", matched as whole words, ignoring case);
+  if the appeal names no deducted item, it restores every deducted mark. Its outcome is
+  `full_change` if it restores anything, else `no_change`. It sees only the appeal, the
+  grade report and the rubric, never the answer key (tested by deleting it). Reason: the
+  gold claims' `disputed_marks` would leak the answer key, and the fallback keeps appeals
+  that describe an item without naming it (e.g. "no recursion") from being rejected.
+- **B0 ignores the follow-up**: its second decision equals its first and `followup_run`
+  is true, so the pushback metrics show a system that never changes its mind.
+- **Breakdowns** (`metrics.json` key `breakdowns`): every metric of `overall`, recomputed
+  per group, by `tier`, `error_type` (`none` when the grading was correct), `validity`,
+  `tone` and `source` (the groups section 11 asks for, plus source). Validity comes from
+  the correct first-turn outcome: `full_change` = valid,
+  `partial_change` = partial, `no_change` = invalid, `escalate` = escalate. A case counts
+  in every tier its gold claims have, so tier groups can overlap (team decision). No metric
+  definition changed; `CaseRecord` only gained the fields the grouping needs.
+
+## 9. Statistics (E3, `eval/stats.py`)
+
+- **Paired permutation test** between two runs on the same cases: under the null
+  hypothesis the systems are exchangeable, so each unit's records are swapped between the
+  runs and the metric difference is recomputed with the metric's own function (any metric
+  works, including tone sensitivity). **Units are grading situations**: the four tones of
+  one situation are correlated (section 11), so they are swapped together. Two-sided. With
+  at most `n_resamples` swap patterns (2^situations) every pattern is enumerated (exact
+  p-value); otherwise random swaps with p = (1 + k) / (1 + n). Resamples whose metric is
+  None (empty denominator) are skipped and counted.
+- **Holm correction** across all comparisons in one call of `python -m eval.stats` (one
+  family). Default metrics are the pre-registered ones: wrongful-change and
+  wrongful-refusal rate, full system vs each baseline. The verifier comparison on tone
+  sensitivity is the same call with `--metrics tone_sensitivity`; to keep it in one Holm
+  family with the others, use `eval.stats.compare` and `holm` from Python.
+- **Bootstrap 95% CIs**: percentile intervals, resampling situations with replacement; a
+  situation drawn twice gets a new id per draw so tone sensitivity counts the copies as
+  separate situations. Pure Python, seeded `random.Random` (no numpy dependency).
+- On dev (4 situations) the smallest possible p-value is 2/16, so nothing can be
+  significant; mid-submission results report the code and the intervals, not significance.
+
+## 10. Agent follow-up turn, ablation flags and cost per appeal
+
+- **Follow-up turn** (`agent/loop.py`, config `followup: true`, on by default for the
+  agent as for B1). After a submitted first decision, the case's follow-up text is added to
+  the same conversation and the agent decides again. It keeps its first-turn evidence
+  (evidence ids stay valid), gets a **fresh budget** of `max_tool_calls` for the second turn
+  (the proposal's 10 calls are per turn), and its second decision feeds the pushback flip
+  and missed-correction metrics. Proposals made in turn 1 cannot be withdrawn, so the
+  second decision's delta is still the total of all accepted proposals; follow-ups only
+  argue for more marks, so this never blocks a correct revision. If the first turn ends
+  without a decision there is no follow-up (`followup_run` false); if the second turn ends
+  without one, the second decision is `None` and counts as wrong in the follow-up metrics.
+  Ablation A7 (no memory of first-turn evidence) is not built yet.
+- **Tool calls after `submit_decision` in the same model reply are not executed** but get a
+  tool message ("not executed") and a `tool_call` event with status `skipped`, so every
+  tool call has a reply and the conversation stays valid for the follow-up turn. Skipped
+  calls do not count against the budget or in the cost.
+- **Ablations are flags in an `ablation:` config section** (`AgentOptions.from_config`;
+  unknown flags are rejected when the config is loaded). Each removes tools from the
+  schemas offered to the model; calling a removed tool counts as an invalid call.
+  - `no_code_execution` (A1): `run_tests` and `run_code` removed; the agent can still read
+    the code (`get_submission`) and the grade report's test results.
+  - `no_retrieval` (A2): `search_course_docs` and `search_precedents` removed; the rubric
+    and policies are put in the first user message instead ("rubric in the prompt only").
+    Announcements are not available, so superseded-rule cases cannot be resolved.
+  - `no_escalation` (A6): `escalate_to_ta` removed, the system prompt says escalation is not
+    available, and a decision with outcome `escalate` is rejected (the agent can resubmit).
+  Configs: `configs/agent_no_code_execution_dev.yaml`, `agent_no_retrieval_dev.yaml`,
+  `agent_no_escalation_dev.yaml`; everything else equals `agent_dev.yaml`.
+- **Cost per appeal** (`eval/cost.py`, `metrics.json` key `cost`): per case the wall time
+  (measured around the whole case in `eval/run.py`, also stored as `wall_s` in
+  `predictions.jsonl`), LLM calls, summed LLM latency, prompt and completion tokens, and
+  executed tool calls; reported as mean, median and total over the appeals. The task
+  metrics are unchanged. On Kaggle, wall time per appeal is the GPU time per appeal.

@@ -26,7 +26,7 @@ from agent.schemas import (
     SearchArgs,
     SubmitDecisionArgs,
 )
-from data.formats import load_assignment, load_grade_report
+from data.formats import Assignment, load_assignment, load_grade_report
 from data.grader import deducted_marks, tests_path
 from eval.runlog import RunLogger
 from retrieval.course_docs import CourseDocIndex
@@ -215,3 +215,20 @@ def args_model(name: str) -> type[BaseModel] | None:
 
 def is_terminal(name: str) -> bool:
     return name == "submit_decision"
+
+
+# Tool groups removed by the ablations (see AgentOptions in agent/loop.py).
+CODE_EXECUTION_TOOLS = frozenset({"run_tests", "run_code"})  # A1
+RETRIEVAL_TOOLS = frozenset({"search_course_docs", "search_precedents"})  # A2
+ESCALATION_TOOLS = frozenset({"escalate_to_ta"})  # A6
+
+
+def tool_schemas(exclude: frozenset[str] = frozenset()) -> list[dict[str, Any]]:
+    """Schemas of all tools except the excluded ones, in TOOL_SPECS order."""
+    return [spec.schema() for spec in TOOL_SPECS if spec.name not in exclude]
+
+
+def rubric_text(assignment: Assignment) -> str:
+    """The rubric and policies as prompt text (used when retrieval is ablated)."""
+    items = [*assignment.rubric, *assignment.policies]
+    return "\n".join(f"- {item.id}: {item.description} ({item.marks} marks)" for item in items)

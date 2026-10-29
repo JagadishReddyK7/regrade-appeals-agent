@@ -8,6 +8,13 @@ tested against a mock model; **nothing has run on a real model yet** (the Kaggle
 the next step). The benchmark is the critical path and has not started beyond one dev
 assignment.
 
+## Pilot log
+- **Attempt 1 (2026-10-27, commit 8080ae4): failed before the model loaded.** vLLM 0.32.0
+  with PyTorch 2.13 (CUDA 13.0) clashed with Kaggle's torchaudio (CUDA 12.8). Fixed in
+  the notebook (torchaudio uninstalled). The rest of the pipeline behaved as designed:
+  the launcher reported the crash, the smoke test failed cleanly, and the runs recorded
+  4 case errors with the commit. Environment: Python 3.13, 2x Tesla T4 (compute 7.5).
+
 ## Built
 | Area | Where | Notes |
 | --- | --- | --- |
@@ -20,11 +27,14 @@ assignment.
 | Sandbox | `sandbox/` | limits (Linux), network and process block, result cache |
 | LLM client and run log | `llm/client.py`, `llm/parsing.py`, `eval/runlog.py` | vLLM and mock backends; JSONL events with run/case/seed/config hash/commit |
 | vLLM launcher and smoke test | `llm/serve.py`, `llm/smoke.py` | checks chat, tool calls, constrained JSON |
-| Agent v0 | `agent/tools.py`, `agent/loop.py` | 9 tools, 10-call budget, evidence ids, proposal cap; no claim splitting, no follow-up turn |
+| Agent v0 | `agent/tools.py`, `agent/loop.py` | 9 tools, 10-call budget per turn, evidence ids, proposal cap, follow-up turn, ablation flags A1/A2/A6; no claim splitting |
+| Cost per appeal | `eval/cost.py` | wall time, LLM calls, latency, tokens, tool calls in `metrics.json` (`cost`) |
 | Course-doc search | `retrieval/course_docs.py` | BM25; announcements carry date and `superseded_by` |
 | Baseline B1 | `baselines/b1_direct.py` | one prompt, JSON decision, follow-up turn |
 | Metrics and runner | `eval/metrics.py`, `eval/run.py` | section 11 task and robustness metrics; `python -m eval.run --config ...` |
-| Kaggle pilot notebook | `notebooks/pilot_dev.ipynb` | not run yet |
+| Baseline B0, result breakdowns | `baselines/b0.py`, `eval/metrics.py` | always reject / always accept, no LLM; `metrics.json` breakdowns by tier, error type, validity, tone, source (E2) |
+| Statistics | `eval/stats.py` | paired permutation tests by situation, Holm, bootstrap CIs; `python -m eval.stats <run> <run> ...` (E3) |
+| Kaggle dev-run notebook | `notebooks/pilot_dev.ipynb` | runs B0, B1, the agent and the three ablations from one account; attempt 1 failed (see Pilot log) |
 | CI | `.github/workflows/tests.yml` | lint, validator, tests on Python 3.11 and 3.13 |
 
 ## Next: rest of week 1 (plan as of 2026-10-27)
@@ -58,10 +68,10 @@ appeals? (3) What is the real GPU time per appeal? Update the plan before week 2
 
 ## Known limitations of what is built
 - The agent's and B1's system prompts have never met a real model; expect tuning on dev.
-- The agent has no follow-up turn yet, so its pushback metrics read `None` (A2).
-- Dev has 6 situations on one assignment (D1) and all appeals are LLM-written, so dev
-  results are preliminary; the test set (B4) has not started.
-- Cases run one at a time (A4); time and tokens per appeal are logged but not summarised (A3).
+- Dev has 4 situations (one assignment); `missed_partial_credit` and `arithmetic_error`
+  situations are still missing (B3 continues).
+- Cases run one at a time (A4).
+- Ablations A0, A3, A4, A5 and A7 are not built (they need claim splitting, precedents or the verifier).
 - The full test suite takes about 30-60 s on Windows (many sandbox subprocesses).
 
 ## Later (weeks 2-8)

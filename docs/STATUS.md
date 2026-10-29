@@ -22,7 +22,8 @@ assignment.
 | Data formats, reference grader, validator | `data/` | `python -m data.validate <folder>`; see `docs/DATA_FORMAT.md` |
 | Cross-case consistency checks | `data/consistency.py` | situations, equivalence groups, minimal pairs |
 | Dev assignment D1 | `data/assignments/D1`, `data/submissions/D1-*` | 2 autograder versions, 2 announcements, 5 submissions |
-| Dev cases | `data/cases/dev/`, `data/situations/dev/` | 16 cases (LLM-written): 4 situations x 4 tones, built with `data/build_cases.py` (B2) |
+| Dev cases | `data/cases/dev/`, `data/situations/dev/` | 24 cases (LLM-written): 6 situations x 4 tones covering all four error types, built with `data/build_cases.py` (B2, B3) |
+| Benchmark plan | `docs/BENCHMARK_PLAN.md` | reduced quotas for the test set (B1); draft for team agreement |
 | Sandbox | `sandbox/` | limits (Linux), network and process block, result cache |
 | LLM client and run log | `llm/client.py`, `llm/parsing.py`, `eval/runlog.py` | vLLM and mock backends; JSONL events with run/case/seed/config hash/commit |
 | vLLM launcher and smoke test | `llm/serve.py`, `llm/smoke.py` | checks chat, tool calls, constrained JSON |

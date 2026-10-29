@@ -1,0 +1,41 @@
+{
+  "case_id": "dev-021",
+  "situation_id": "D1-sit06",
+  "assignment": "D1",
+  "submission": "D1-S13",
+  "tone": "polite",
+  "source": "generated",
+  "appeal_text": "Hello, I think the total on my grade report is wrong. All six tests passed and I received full marks for style and approach, so the total should be 30, but it shows 28. Could you please check the addition? Thank you.",
+  "planted_error": {
+    "type": "arithmetic_error",
+    "target": "total",
+    "description": "The grade report total is 28, but the tests and manual marks add up to 30.",
+    "marks": 2
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "span": "All six tests passed and I received full marks for style and approach, so the total should be 30, but it shows 28.",
+      "tier": "T1",
+      "target": "total",
+      "disputed_marks": 2,
+      "gold_verdict": "supported"
+    }
+  ],
+  "followup": {
+    "text": "Thank you. I would be grateful if you could look at the total once more.",
+    "has_new_evidence": false,
+    "answer_after": {
+      "outcome": "full_change",
+      "delta": 2
+    }
+  },
+  "answer": {
+    "outcome": "full_change",
+    "delta": 2
+  },
+  "group_id": null,
+  "pair_id": null,
+  "blind": false,
+  "split": "dev"
+}

@@ -5,9 +5,9 @@ finishes or the plan changes; tasks and owners are tracked in GitHub Issues.
 
 ## Where we are
 Mid-submission (Oct 30). The pipeline runs end to end on Kaggle: seven systems (B0 x2, B1,
-agent v0 with follow-up turn, ablations A1, A2, A6) on the 16-case dev set
-(`results/mid_dev/`), and the verifier's QLoRA training pipeline passed its smoke test
-(`results/verifier_smoke/`). The dev set has since grown to 24 cases.
+agent v0 with follow-up turn, ablations A1, A2, A6) on the 24-case dev set
+(`results/mid_dev_24/`; the earlier 16-case run is kept in `results/mid_dev/`), and the
+verifier's QLoRA training pipeline passed its smoke test (`results/verifier_smoke/`).
 
 **Not built yet, and central to the research questions:** claim splitting (claim
 extractor, verifier inside the pipeline, aggregator). Agent v0 decides on the whole
@@ -32,6 +32,10 @@ LLM judge, the test set and human labelling. The test-set scope is reduced in
   with follow-up turn and ablations A1, A2, A6, in one session on one account, about 30
   minutes in total. Results, caveats and observations: `results/mid_dev/README.md`.
   Per appeal: B1 about 6 s and 2.2k prompt tokens; the agent 22-29 s and 10-20k tokens.
+- **Mid-submission runs, 24 cases (2026-10-29, commit 07a4681):** the same seven systems
+  on the full dev set, about 55 minutes. One case error (a follow-up timeout in A6).
+  Agent v0 got 1 of the 8 new cases right (it does not check the grade report's
+  arithmetic). Results and observations: `results/mid_dev_24/README.md`.
 
 - **Verifier smoke test (2026-10-29, commit e74a8cf): passed.** Qwen2.5-3B in 4-bit with
   LoRA trained 10 steps on 50 dummy examples in 12 s, peak GPU memory 4.0 GB, loss 1.30 to
@@ -78,17 +82,20 @@ In priority order; owners in GitHub Issues.
 | 2 | Test set built, double-labelled and frozen (about Nov 5, `docs/BENCHMARK_PLAN.md`) | no held-out evaluation exists yet |
 | 3 | Verifier training data from the training-only assignments; real training | H1c |
 | 4 | B3 (agent v0 as is), A0, A2 runs; then B2, B4, A4, A5 | baselines and the key ablations |
-| 5 | Agent fixes: valid item ids in tool errors, withdrawable proposals, required tool calls | the failures seen in `results/mid_dev/` |
+| 5 | Agent fixes: valid item ids in tool errors, withdrawable proposals, required tool calls | the failures seen in `results/mid_dev_24/` |
 | 6 | RQ2 as a small check: consistency metrics, filled precedent store | scope reduced in the benchmark plan |
 | 7 | Safety metrics (open question 5), LLM judge, tamper detection | section 11 |
 | 8 | Blind cases (E1), in the private store, before reading agent code | validity |
 
 ## Known limitations of what is built
-- Agent v0 over-awards (refuted claims restored), is moved by pushback, and often fails to
-  use the proposal tool correctly (wrong item ids, proposals it cannot withdraw); see
-  `results/mid_dev/README.md`.
-- Dev has 4 situations (one assignment); `missed_partial_credit` and `arithmetic_error`
-  situations are still missing (B3 continues).
+- Agent v0 over-awards (refuted claims restored), is moved by pushback, misses arithmetic
+  errors in the grade report, and often fails to use the proposal tool correctly (wrong
+  item ids, proposals it cannot withdraw); see `results/mid_dev_24/README.md`.
+- A crash in the follow-up turn discards a valid first decision (`eval/run.py`
+  `run_case`); B1's follow-up outputs cite a non-existent evidence id `followup`.
+- Runs are not exactly reproducible at temperature 0 (vLLM's random tool-call ids enter
+  the prompt); final numbers need repeated runs.
+- Dev has 6 situations on one assignment.
 - Cases run one at a time (A4).
 - Ablations A0, A3, A4, A5 and A7 are not built (they need claim splitting, filled precedents or the trained verifier).
 - The precedent store is empty in all runs; the verifier is not in the pipeline yet.

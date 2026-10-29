@@ -19,9 +19,10 @@ Format: what was decided, then why.
   Consequence: test-split data must never be committed (see 2.10).
 - **`CLAUDE.md` and `.claude/settings.json` are committed.** Every teammate's Claude Code
   then follows the same rules, and updates reach everyone through `git pull`.
-  `.claude/settings.json` enforces two rules in Claude Code: git commands that change
-  history or the remote are blocked, and Claude's file tools cannot read `data/cases/test/`
-  or `data/private/`. Limitation: a deny rule on reads does not stop a shell command
+  `.claude/settings.json` blocks Claude's file tools from reading `data/cases/test/` and
+  `data/private/`. The git deny rules were removed on 2026-10-30 (team decision): each
+  person commits manually and the `CLAUDE.md` rule against git commands that change
+  history or the remote still applies, but is not enforced by settings. Limitation: a deny rule on reads does not stop a shell command
   (e.g. `cat`) from reading those paths, so the `CLAUDE.md` rule still matters, and the
   real protection is keeping test data out of the working copy except on the evaluation
   machine. Personal settings go in `.claude/settings.local.json` (excluded locally); they
@@ -204,6 +205,11 @@ Interpretations of proposal section 11:
   it depends on the gold claims' disputed marks, which a system cannot know.
 - **Missed-correction rate** counts only follow-ups with new evidence where a revision was
   needed (the first decision did not already match the correct post-follow-up answer).
+- **Follow-up metrics use the same "correct decision" rule as exact-decision accuracy**
+  (team decision, 2026-10-30, closes open question 1): pushback flip rate and
+  missed-correction rate judge a decision by marks and escalation, not the
+  full/partial label. Finished runs are rescored with `python -m eval.rescore <run dir>`,
+  which writes `metrics_rescored.json` next to the original `metrics.json`.
 - **Tone sensitivity** compares (outcome, delta) across the tone variants of a situation;
   situations with one variant are skipped; "no decision" counts as its own value.
 - **Over-escalation** is the escalation rate on cases whose correct outcome is not
@@ -218,17 +224,26 @@ Runner behaviour:
 
 ## Open questions
 
-1. **Pushback flip rate and missed-correction rate** still judge "correct" by label match
-   (outcome and delta), unlike exact-decision accuracy. Switch them to the new definition?
-2. **Pin vLLM** after the pilot and add it (plus QLoRA libraries) as an optional `gpu`
-   extra in `pyproject.toml`?
-3. **Embedding model for retrieval**: a new dependency; run on Kaggle only?
+1. *(Decided 2026-10-30: follow-up metrics use same_decision; see section 7.)*
+2. *(Decided: vLLM pinned to 0.32.0 in the notebook; QLoRA libraries in the `gpu` extra.
+   Still open: add vLLM to the `gpu` extra as well.)*
+3. *(Decided for the mid-submission: BM25 only. Open for the final: add embeddings.)*
 4. **May the agent see the reference solution?** Currently no.
 5. **Definitions of the hidden-instruction success rate and unsafe-action rate** (section 11).
 6. **Escalation without `escalate_to_ta`**: the agent can submit `escalate` without calling
    the tool, so nothing reaches the TA log. Require the call?
 7. **Concurrency**: cases run one after another; the GPU budget assumes several appeals in
-   parallel so vLLM can batch them.
+   parallel so vLLM can batch them (the mid runs took about 30 minutes, so not urgent).
+8. **Tone sensitivity** still compares (outcome, delta), so a full/partial label difference
+   counts as a different decision. It made no difference in the mid runs; switch it to
+   same_decision too, for consistency?
+9. **Scope reduction in `docs/BENCHMARK_PLAN.md`** (126 instead of 300 test cases, 3 test
+   assignments, one seed, other-generator test and realism test dropped): the team must
+   agree, and the report must state what can no longer be claimed (for example the
+   proposal's 10-15 point detectable difference).
+10. **Number of training-only assignments** for the verifier: `docs/BENCHMARK_PLAN.md` says
+    likely 1-2, `docs/VERIFIER_PLAN.md` assumed 4 (about 3,500 examples). Decide with the
+    benchmark lead.
 
 ## 8. Baseline B0 and result breakdowns (E2)
 

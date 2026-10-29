@@ -182,6 +182,15 @@ def run_case(system: System, case: Case, logger: RunLogger) -> tuple[SystemOutpu
         return SystemOutput(first=None), error
 
 
+def score(records: list[CaseRecord]) -> dict[str, Any]:
+    """The task, robustness and breakdown metrics of a run (also used by eval.rescore)."""
+    return {
+        "overall": compute_all(records),
+        "wrongful_change_rate_by_tone": by_group(records, lambda r: r.tone, wrongful_change_rate),
+        "breakdowns": compute_breakdowns(records),
+    }
+
+
 def run_eval(
     config: dict[str, Any], backend: Backend | None = None, allow_test_split: bool = False
 ) -> Path:
@@ -220,9 +229,7 @@ def run_eval(
         "config_hash": chash,
         "code_version": version,
         "n_case_errors": errors,
-        "overall": compute_all(records),
-        "wrongful_change_rate_by_tone": by_group(records, lambda r: r.tone, wrongful_change_rate),
-        "breakdowns": compute_breakdowns(records),
+        **score(records),
         "cost": summarise_cost(per_case_cost(read_events(run_dir / "events.jsonl"), wall_s)),
     }
     (run_dir / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")

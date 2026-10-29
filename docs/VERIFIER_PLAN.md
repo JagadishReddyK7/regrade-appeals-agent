@@ -44,12 +44,12 @@ tone-paired data), so the tone must reach the verifier for training to matter.
 
 | Item | Plan |
 | --- | --- |
-| Source | the 4 training-only assignments (never the test assignments) |
+| Source | the training-only assignments, never the test assignments (the proposal plans 4; `docs/BENCHMARK_PLAN.md` suggests 1-2 given the time: open question 10) |
 | Labels | known by construction: generated with the same planted-error procedure as the benchmark, so each claim's verdict follows from the planted error and the reference grader |
 | Evidence | tool outputs produced by running the real tools (sandbox, course-doc search) on the training submissions, in the bundle format above |
 | Tone pairing | each claim and evidence written in 3 tones (polite, emotional, hidden instruction) with the same label; **authority held out** to test generalisation to an unseen tone |
 | Generator | Llama-3.1-8B-Instruct on Kaggle; a second family (Gemma-2-9B or Mistral-7B) only for the out-of-distribution test |
-| Size | about 3,500 examples, balanced across verdicts |
+| Size | about 3,500 examples with 4 assignments; fewer with 1-2 (to be decided), balanced across verdicts |
 | Ablation A5 | the same data without tone pairing (one tone per claim) |
 
 The dummy generator (`verifier/dummy_data.py`) already produces data in this shape (tone

@@ -1,12 +1,21 @@
 # Project status
 
-Last updated: 2026-10-27. Update this file in any PR that finishes or starts a task.
+Last updated: 2026-10-30 (mid-submission). Update this file when a milestone-level item
+finishes or the plan changes; tasks and owners are tracked in GitHub Issues.
 
 ## Where we are
-Week 1 of the plan in proposal section 14. The infrastructure for the pilot is built and
-tested against a mock model; **nothing has run on a real model yet** (the Kaggle pilot is
-the next step). The benchmark is the critical path and has not started beyond one dev
-assignment.
+Mid-submission (Oct 30). The pipeline runs end to end on Kaggle: seven systems (B0 x2, B1,
+agent v0 with follow-up turn, ablations A1, A2, A6) on the 16-case dev set
+(`results/mid_dev/`), and the verifier's QLoRA training pipeline passed its smoke test
+(`results/verifier_smoke/`). The dev set has since grown to 24 cases.
+
+**Not built yet, and central to the research questions:** claim splitting (claim
+extractor, verifier inside the pipeline, aggregator). Agent v0 decides on the whole
+appeal, so it is the whole-appeal condition (close to B3 / A0); RQ1a's comparison of
+claim-by-claim against whole-appeal checking needs the full pipeline. Also not built:
+baselines B2-B4, ablations A0, A3-A5, A7, consistency metrics (RQ2), safety metrics, the
+LLM judge, the test set and human labelling. The test-set scope is reduced in
+`docs/BENCHMARK_PLAN.md` (draft, needs the team's agreement).
 
 ## Pilot log
 - **Attempt 1 (2026-10-27, commit 8080ae4): failed before the model loaded.** vLLM 0.32.0
@@ -54,34 +63,25 @@ assignment.
 | Mid-submission results | `results/mid_dev/` | the seven dev runs with configs, metrics, predictions and full event logs |
 | CI | `.github/workflows/tests.yml` | lint, validator, tests on Python 3.11 and 3.13 |
 
-## Next: rest of week 1 (plan as of 2026-10-27)
-**GitHub Issues are the task board** (one issue per row, with owner and progress). This
-table is the initial plan and is not updated per task; update this file only when a
-milestone-level item finishes or the plan changes. Roles follow proposal section 14.
-Ready-to-paste prompts are in `docs/IMPLEMENTATION_GUIDE.md`.
+## Done for the mid-submission
+Pilot (0); agent follow-up turn and cost per appeal (A2, A3); ablation flags A1, A2, A6;
+case builder and dev set of 24 cases (B2, B3); test-set and labelling plan (B1, draft);
+B0, breakdowns and statistics (E2, E3); evidence bundle, precedent store, in-force ranking
+and QLoRA smoke test (R1-R3).
 
-| # | Task | Role | Depends on |
-| --- | --- | --- | --- |
-| 0 | Run the Kaggle pilot; record smoke-test results, vLLM version, time per appeal here (fallbacks in the guide) | agent lead | - |
-| A1 | Minimal claim extractor + extraction precision/recall on dev | agent lead | pilot |
-| A2 | Agent follow-up (pushback) turn | agent lead | - |
-| A3 | Time and tokens per appeal in `metrics.json` | agent lead | - |
-| A4 | Run cases concurrently (thread-safe logging) | agent lead | - |
-| B1 | Quota plan (assignments x error types x tiers x tones) | benchmark lead | - |
-| B2 | Case-building tool: one situation -> 4 tone variants (+ validator) | benchmark lead | - |
-| B3 | Grow the dev set to ~40 cases with tone variants | benchmark lead | B2 |
-| B4 | Start test assignments in the private store | benchmark lead | B1 |
-| R1 | Evidence bundle format shared by agent and verifier | retrieval/FT lead + agent lead | - |
-| R2 | Precedent store; rank in-force announcements above superseded ones | retrieval/FT lead | - |
-| R3 | QLoRA smoke test on Kaggle | retrieval/FT lead | R1 |
-| E1 | Write the ~60 blind cases **before reading agent code or prompts**; store them only in the private store (`docs/DATA_FORMAT.md`) | evaluation lead | test assignments (B4), or draft appeal texts first |
-| E2 | Baseline B0; result breakdowns by tier, error type, validity, source | evaluation lead | - |
-| E3 | Statistics: paired permutation tests, Holm, bootstrap by situation | evaluation lead | - |
-| E4 | Definitions of safety metrics, then implementation | evaluation lead | open question 5 |
+## Next: to the final submission (Nov 15)
+In priority order; owners in GitHub Issues.
 
-**End of week 1: go/no-go meeting.** (1) Does the 7B find about 80% of planted claims on
-dev cases (needs A1)? (2) Does B1 make real mistakes on pressured and rubric-based
-appeals? (3) What is the real GPU time per appeal? Update the plan before week 2.
+| # | Task | Why |
+| --- | --- | --- |
+| 1 | Claim extractor and aggregator; verifier in the pipeline | RQ1a and H1b cannot be tested without claim splitting |
+| 2 | Test set built, double-labelled and frozen (about Nov 5, `docs/BENCHMARK_PLAN.md`) | no held-out evaluation exists yet |
+| 3 | Verifier training data from the training-only assignments; real training | H1c |
+| 4 | B3 (agent v0 as is), A0, A2 runs; then B2, B4, A4, A5 | baselines and the key ablations |
+| 5 | Agent fixes: valid item ids in tool errors, withdrawable proposals, required tool calls | the failures seen in `results/mid_dev/` |
+| 6 | RQ2 as a small check: consistency metrics, filled precedent store | scope reduced in the benchmark plan |
+| 7 | Safety metrics (open question 5), LLM judge, tamper detection | section 11 |
+| 8 | Blind cases (E1), in the private store, before reading agent code | validity |
 
 ## Known limitations of what is built
 - Agent v0 over-awards (refuted claims restored), is moved by pushback, and often fails to

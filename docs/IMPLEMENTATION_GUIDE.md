@@ -149,6 +149,13 @@ main runs, so results are comparable).
 
 ## Step 6: Prompts
 
+### Done (up to the mid-submission)
+Also done since: A2 (follow-up turn), A3 (cost per appeal), ablation flags A1/A2/A6, B2
+(case builder), E2 (B0 and breakdowns), E3 (statistics), R1-R3 (evidence bundle, precedent
+store, QLoRA smoke test). Their prompts below are kept for reference; do not re-run them.
+The open items are A1 (claim extractor), A4 (concurrency) and the later prompts; the
+current priorities are in `docs/STATUS.md`.
+
 ### Done (week 1, P0-P6)
 Scaffold, case schema and validator, sandbox, LLM client, tools and agent v0, B1 and
 metrics, Kaggle pilot notebook. Several prompts were adjusted while implementing (for

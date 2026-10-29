@@ -253,3 +253,16 @@ def test_run_eval_b0_needs_no_llm_and_writes_breakdowns(tmp_path: Path) -> None:
     assert metrics["overall"]["exact_decision_accuracy"] == 0.25
     assert metrics["breakdowns"]["tier"]["T3"]["n_cases"] == 1
     assert set(metrics["breakdowns"]["validity"]) == {"valid", "partial", "invalid", "escalate"}
+
+
+def test_rescore_reproduces_run_metrics(tmp_path: Path) -> None:
+    from eval.rescore import rescore
+
+    script = [answer("partial_change", 5), answer("full_change", 5)] + [answer("no_change", 0)] * 6
+    run_dir = run_eval(config(tmp_path), backend=MockLLM(script))
+    original = json.loads((run_dir / "metrics.json").read_text())
+    rescored = rescore(run_dir, tmp_path / "cases")
+    assert rescored["overall"] == original["overall"]
+    assert rescored["breakdowns"] == original["breakdowns"]
+    assert rescored["cost"] == original["cost"]
+    assert (run_dir / "metrics_rescored.json").exists()

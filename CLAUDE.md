@@ -95,9 +95,10 @@ search_precedents, propose_grade_change, escalate_to_ta, submit_decision.
 ## Git: each person commits and pushes manually
 - NEVER run git commands that change history or the remote: no `git add`, `git commit`,
   `git push`, `git pull`, `git merge`, `git rebase`, `git reset`, `git checkout`,
-  `git switch`, `git stash` or `git tag` (also enforced by `.claude/settings.json`,
-  which also blocks file-tool reads of the private test paths; shell reads are not
-  blocked, so never `cat`, `grep` or otherwise open them through Bash either).
+  `git switch`, `git stash` or `git tag`. This rule is not enforced by settings (each
+  person commits manually); follow it anyway. `.claude/settings.json` blocks file-tool
+  reads of the private test paths; shell reads are not blocked, so never `cat`, `grep` or
+  otherwise open them through Bash either.
   Read-only commands (`git status`, `git diff`, `git log`, `git show`) are fine.
 - Team workflow: one branch and one pull request per task; `main` is protected and
   needs passing CI and one review. At the START of each task, tell the user which branch

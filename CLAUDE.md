@@ -41,13 +41,15 @@ search_precedents, propose_grade_change, escalate_to_ta, submit_decision.
 
 ## Repository layout
 - `data/` assignments, submissions, cases/{dev,train}; `data/validate.py`,
-  `data/grader.py` (reference grader), `data/consistency.py`, `data/formats.py`
+  `data/grader.py` (reference grader), `data/consistency.py`, `data/formats.py`,
+  `data/build_cases.py` (situation file -> four tone variants)
 - `sandbox/` sandboxed execution, test runner, result cache
 - `llm/` model client (OpenAI-compatible for vLLM, plus a mock backend), vLLM launcher,
   smoke test
 - `agent/` schemas, tools, tool-calling loop (extractor, aggregator to come)
-- `retrieval/` course-doc index (precedent store to come)
-- `verifier/` training-data generation, QLoRA training, inference
+- `retrieval/` course-doc index, precedent store
+- `verifier/` prompt format, dummy data, QLoRA training (real training data to come);
+  plan in `docs/VERIFIER_PLAN.md`
 - `baselines/` B0-B4 (B1 done)
 - `eval/` metrics, run log, evaluation runner (statistics and LLM judge to come)
 - `configs/` YAML configs; every ablation (A0-A7) is a config flag, not a code fork
@@ -59,7 +61,7 @@ search_precedents, propose_grade_change, escalate_to_ta, submit_decision.
 - Local development is CPU-only (VS Code). Use the mock LLM backend for tests.
 - All GPU work runs on Kaggle T4 (16 GB): vLLM serves models with an OpenAI-compatible API.
   T4 has no bfloat16: use float16 everywhere.
-- Code must run on Python 3.11 (Kaggle). Developing on a newer Python is fine; ruff
+- Code must run on Python 3.11 and newer; Kaggle's image currently runs 3.13. ruff
   targets py311 and CI tests 3.11 and 3.13. Dependencies in `pyproject.toml`.
 - Windows: write files with `encoding="utf-8"` explicitly; the default encoding there
   cannot write characters such as the Greek letter delta.
@@ -93,9 +95,10 @@ search_precedents, propose_grade_change, escalate_to_ta, submit_decision.
 ## Git: each person commits and pushes manually
 - NEVER run git commands that change history or the remote: no `git add`, `git commit`,
   `git push`, `git pull`, `git merge`, `git rebase`, `git reset`, `git checkout`,
-  `git switch`, `git stash` or `git tag` (also enforced by `.claude/settings.json`,
-  which also blocks file-tool reads of the private test paths; shell reads are not
-  blocked, so never `cat`, `grep` or otherwise open them through Bash either).
+  `git switch`, `git stash` or `git tag`. This rule is not enforced by settings (each
+  person commits manually); follow it anyway. `.claude/settings.json` blocks file-tool
+  reads of the private test paths; shell reads are not blocked, so never `cat`, `grep` or
+  otherwise open them through Bash either.
   Read-only commands (`git status`, `git diff`, `git log`, `git show`) are fine.
 - Team workflow: one branch and one pull request per task; `main` is protected and
   needs passing CI and one review. At the START of each task, tell the user which branch

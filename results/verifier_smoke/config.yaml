@@ -1,0 +1,19 @@
+batch_size: 2
+check_examples: 6
+data: runs/verifier_dummy.jsonl
+learning_rate: 0.0002
+lora:
+  alpha: 32
+  dropout: 0.05
+  r: 16
+  target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+max_length: 1024
+max_steps: 10
+model: Qwen/Qwen2.5-3B-Instruct
+name: verifier_smoke
+output_dir: runs
+seed: 0

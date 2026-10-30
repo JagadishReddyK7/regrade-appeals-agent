@@ -11,16 +11,18 @@ Format: what was decided, then why.
 
 ## 1. Repository and tooling
 
-- **Python 3.11 is the target; newer versions are fine for development.**
+- **Python 3.11 is the minimum; newer versions are fine.**
   `requires-python = ">=3.11"`, ruff targets py311, and CI tests 3.11 and 3.13.
-  Kaggle runs 3.11; ruff catches newer syntax, CI catches newer library calls.
+  The first pilot showed Kaggle's image runs Python 3.13 (it was assumed to be 3.11);
+  CI already covers it.
 - **The repository is public, including `docs/proposal.pdf`.** Intended by the team.
   Consequence: test-split data must never be committed (see 2.10).
 - **`CLAUDE.md` and `.claude/settings.json` are committed.** Every teammate's Claude Code
   then follows the same rules, and updates reach everyone through `git pull`.
-  `.claude/settings.json` enforces two rules in Claude Code: git commands that change
-  history or the remote are blocked, and Claude's file tools cannot read `data/cases/test/`
-  or `data/private/`. Limitation: a deny rule on reads does not stop a shell command
+  `.claude/settings.json` blocks Claude's file tools from reading `data/cases/test/` and
+  `data/private/`. The git deny rules were removed on 2026-10-30 (team decision): each
+  person commits manually and the `CLAUDE.md` rule against git commands that change
+  history or the remote still applies, but is not enforced by settings. Limitation: a deny rule on reads does not stop a shell command
   (e.g. `cat`) from reading those paths, so the `CLAUDE.md` rule still matters, and the
   real protection is keeping test data out of the working copy except on the evaluation
   machine. Personal settings go in `.claude/settings.local.json` (excluded locally); they
@@ -85,6 +87,26 @@ Formats are described in `docs/DATA_FORMAT.md`; this section records why they lo
     submissions; minimal pairs are exactly two cases with the same content. A claim cannot
     dispute more marks than the grade report deducted on its target.
 
+13. **Tone variants are built from a situation file, not written by hand**
+    (`data/build_cases.py`, situation files in `data/situations/<split>/`). A situation
+    needs all four tones (a situation is by definition four variants) and a verbatim span
+    for every claim in every tone. Case ids are stable: explicit, else the existing case's id,
+    else the next free `<split>-NNN`, so rebuilding is idempotent. The builder never edits
+    an existing hidden-instruction submission copy. Dev appeals are LLM-written
+    (`source: "generated"`, see 2.11). The runner tests in `tests/test_eval_run.py` now run on
+    a copy of `dev-001..004`, so growing the dev folder does not change their scripted results.
+
+14. **Partial credit for style is defined in announcement A3** (D1, 2026-09-19): 2 marks if
+    every function has a docstring, 1 if at least one but not every, 0 if none. The
+    `missed_partial_credit` situation (sit05) needs a rule the documents state; the correct
+    marks are then decidable from the course documents, like the other error types. A3 does
+    not supersede an earlier announcement. A `missed_partial_credit` claim has gold verdict
+    `supported` with `disputed_marks` 2 (what the student asks for) and a correct delta of 1
+    (partial change).
+15. **The test set is scaled down** from about 300 to about 126 cases (28 situations on 3
+    test assignments, 2 equivalence groups, 3 minimal pairs); `docs/BENCHMARK_PLAN.md` lists
+    every cut and the reasons. Affects the proposal's scale, so it needs the team's agreement.
+
 ## 3. Sandbox
 
 - **One subprocess per run**, fresh temporary working directory, clean environment, fixed
@@ -116,6 +138,18 @@ Formats are described in `docs/DATA_FORMAT.md`; this section records why they lo
   (T4 has no bfloat16), hermes tool-call parser, `max_model_len` 16384 (fits 10 capped
   tool results; costs little KV-cache memory on a T4).
 
+- **Kaggle environment (pilot attempt 1, 2026-10-27).** `pip install vllm` gave vLLM
+  0.32.0 with PyTorch 2.13 built for CUDA 13.0. Kaggle's preinstalled torchaudio
+  (CUDA 12.8) then crashed the server at start-up, because transformers imports it.
+  vLLM does not need torchaudio, so the notebook uninstalls it. The notebook now stops
+  at the first failure (server or smoke test) and saves `vllm.log` to the outputs.
+- **vLLM is pinned to 0.32.0** in the notebook (`VLLM_SPEC`), the version that worked in
+  pilot attempt 2 and the mid-submission runs, so a new release cannot change or break a
+  run. Adding it to `pyproject.toml` as an optional extra is still open (question 2).
+- **Selected runs are committed under `results/`** (one folder per occasion, run folders
+  directly inside it, since `runs/` is gitignored). Raw Kaggle output folders
+  (`*_outputs/`) stay ignored. Only dev runs are committed; test-split runs never are.
+
 ## 5. Agent (v0: tool loop without claim splitting)
 
 - **Tools see only what a TA would see**: the submission, the grade report as given, the
@@ -140,7 +174,8 @@ Formats are described in `docs/DATA_FORMAT.md`; this section records why they lo
   This is the whole-appeal setting of ablation A0 and baseline B3.
 - **Tool results are shortened before the model sees them** (at most 5,000 characters;
   long fields keep their start and end). The log and the evidence keep the full output.
-- **`search_precedents` returns an empty list** until the precedent store exists.
+- **`search_precedents` returns an empty list** unless a precedent store is configured
+  (section 11).
 
 ## 6. Baseline B1
 
@@ -170,6 +205,11 @@ Interpretations of proposal section 11:
   it depends on the gold claims' disputed marks, which a system cannot know.
 - **Missed-correction rate** counts only follow-ups with new evidence where a revision was
   needed (the first decision did not already match the correct post-follow-up answer).
+- **Follow-up metrics use the same "correct decision" rule as exact-decision accuracy**
+  (team decision, 2026-10-30, closes open question 1): pushback flip rate and
+  missed-correction rate judge a decision by marks and escalation, not the
+  full/partial label. Finished runs are rescored with `python -m eval.rescore <run dir>`,
+  which writes `metrics_rescored.json` next to the original `metrics.json`.
 - **Tone sensitivity** compares (outcome, delta) across the tone variants of a situation;
   situations with one variant are skipped; "no decision" counts as its own value.
 - **Over-escalation** is the escalation rate on cases whose correct outcome is not
@@ -184,14 +224,129 @@ Runner behaviour:
 
 ## Open questions
 
-1. **Pushback flip rate and missed-correction rate** still judge "correct" by label match
-   (outcome and delta), unlike exact-decision accuracy. Switch them to the new definition?
-2. **Pin vLLM** after the pilot and add it (plus QLoRA libraries) as an optional `gpu`
-   extra in `pyproject.toml`?
-3. **Embedding model for retrieval**: a new dependency; run on Kaggle only?
+1. *(Decided 2026-10-30: follow-up metrics use same_decision; see section 7.)*
+2. *(Decided: vLLM pinned to 0.32.0 in the notebook; QLoRA libraries in the `gpu` extra.
+   Still open: add vLLM to the `gpu` extra as well.)*
+3. *(Decided for the mid-submission: BM25 only. Open for the final: add embeddings.)*
 4. **May the agent see the reference solution?** Currently no.
 5. **Definitions of the hidden-instruction success rate and unsafe-action rate** (section 11).
 6. **Escalation without `escalate_to_ta`**: the agent can submit `escalate` without calling
    the tool, so nothing reaches the TA log. Require the call?
 7. **Concurrency**: cases run one after another; the GPU budget assumes several appeals in
-   parallel so vLLM can batch them.
+   parallel so vLLM can batch them (the mid runs took about 30 minutes, so not urgent).
+8. **Tone sensitivity** still compares (outcome, delta), so a full/partial label difference
+   counts as a different decision. It made no difference in the mid runs; switch it to
+   same_decision too, for consistency?
+9. **Scope reduction in `docs/BENCHMARK_PLAN.md`** (126 instead of 300 test cases, 3 test
+   assignments, one seed, other-generator test and realism test dropped): the team must
+   agree, and the report must state what can no longer be claimed (for example the
+   proposal's 10-15 point detectable difference).
+10. **Number of training-only assignments** for the verifier: `docs/BENCHMARK_PLAN.md` says
+    likely 1-2, `docs/VERIFIER_PLAN.md` assumed 4 (about 3,500 examples). Decide with the
+    benchmark lead.
+
+## 8. Baseline B0 and result breakdowns (E2)
+
+- **B0 has two fixed policies** (`baselines/b0.py`, config `b0: {mode: reject|accept}`,
+  configs `b0_reject_dev.yaml` and `b0_accept_dev.yaml`); it needs no LLM.
+  `reject` always answers `no_change`. `accept` believes the appeal: it restores every mark
+  the grade report deducted on the items the appeal text names (test id, rubric or policy
+  name with or without underscores, or "total", matched as whole words, ignoring case);
+  if the appeal names no deducted item, it restores every deducted mark. Its outcome is
+  `full_change` if it restores anything, else `no_change`. It sees only the appeal, the
+  grade report and the rubric, never the answer key (tested by deleting it). Reason: the
+  gold claims' `disputed_marks` would leak the answer key, and the fallback keeps appeals
+  that describe an item without naming it (e.g. "no recursion") from being rejected.
+- **B0 ignores the follow-up**: its second decision equals its first and `followup_run`
+  is true, so the pushback metrics show a system that never changes its mind.
+- **Breakdowns** (`metrics.json` key `breakdowns`): every metric of `overall`, recomputed
+  per group, by `tier`, `error_type` (`none` when the grading was correct), `validity`,
+  `tone` and `source` (the groups section 11 asks for, plus source). Validity comes from
+  the correct first-turn outcome: `full_change` = valid,
+  `partial_change` = partial, `no_change` = invalid, `escalate` = escalate. A case counts
+  in every tier its gold claims have, so tier groups can overlap (team decision). No metric
+  definition changed; `CaseRecord` only gained the fields the grouping needs.
+
+## 9. Statistics (E3, `eval/stats.py`)
+
+- **Paired permutation test** between two runs on the same cases: under the null
+  hypothesis the systems are exchangeable, so each unit's records are swapped between the
+  runs and the metric difference is recomputed with the metric's own function (any metric
+  works, including tone sensitivity). **Units are grading situations**: the four tones of
+  one situation are correlated (section 11), so they are swapped together. Two-sided. With
+  at most `n_resamples` swap patterns (2^situations) every pattern is enumerated (exact
+  p-value); otherwise random swaps with p = (1 + k) / (1 + n). Resamples whose metric is
+  None (empty denominator) are skipped and counted.
+- **Holm correction** across all comparisons in one call of `python -m eval.stats` (one
+  family). Default metrics are the pre-registered ones: wrongful-change and
+  wrongful-refusal rate, full system vs each baseline. The verifier comparison on tone
+  sensitivity is the same call with `--metrics tone_sensitivity`; to keep it in one Holm
+  family with the others, use `eval.stats.compare` and `holm` from Python.
+- **Bootstrap 95% CIs**: percentile intervals, resampling situations with replacement; a
+  situation drawn twice gets a new id per draw so tone sensitivity counts the copies as
+  separate situations. Pure Python, seeded `random.Random` (no numpy dependency).
+- On dev (4 situations) the smallest possible p-value is 2/16, so nothing can be
+  significant; mid-submission results report the code and the intervals, not significance.
+
+## 10. Agent follow-up turn, ablation flags and cost per appeal
+
+- **Follow-up turn** (`agent/loop.py`, config `followup: true`, on by default for the
+  agent as for B1). After a submitted first decision, the case's follow-up text is added to
+  the same conversation and the agent decides again. It keeps its first-turn evidence
+  (evidence ids stay valid), gets a **fresh budget** of `max_tool_calls` for the second turn
+  (the proposal's 10 calls are per turn), and its second decision feeds the pushback flip
+  and missed-correction metrics. Proposals made in turn 1 cannot be withdrawn, so the
+  second decision's delta is still the total of all accepted proposals; follow-ups only
+  argue for more marks, so this never blocks a correct revision. If the first turn ends
+  without a decision there is no follow-up (`followup_run` false); if the second turn ends
+  without one, the second decision is `None` and counts as wrong in the follow-up metrics.
+  Ablation A7 (no memory of first-turn evidence) is not built yet.
+- **Tool calls after `submit_decision` in the same model reply are not executed** but get a
+  tool message ("not executed") and a `tool_call` event with status `skipped`, so every
+  tool call has a reply and the conversation stays valid for the follow-up turn. Skipped
+  calls do not count against the budget or in the cost.
+- **Ablations are flags in an `ablation:` config section** (`AgentOptions.from_config`;
+  unknown flags are rejected when the config is loaded). Each removes tools from the
+  schemas offered to the model; calling a removed tool counts as an invalid call.
+  - `no_code_execution` (A1): `run_tests` and `run_code` removed; the agent can still read
+    the code (`get_submission`) and the grade report's test results.
+  - `no_retrieval` (A2): `search_course_docs` and `search_precedents` removed; the rubric
+    and policies are put in the first user message instead ("rubric in the prompt only").
+    Announcements are not available, so superseded-rule cases cannot be resolved.
+  - `no_escalation` (A6): `escalate_to_ta` removed, the system prompt says escalation is not
+    available, and a decision with outcome `escalate` is rejected (the agent can resubmit).
+  Configs: `configs/agent_no_code_execution_dev.yaml`, `agent_no_retrieval_dev.yaml`,
+  `agent_no_escalation_dev.yaml`; everything else equals `agent_dev.yaml`.
+- **Cost per appeal** (`eval/cost.py`, `metrics.json` key `cost`): per case the wall time
+  (measured around the whole case in `eval/run.py`, also stored as `wall_s` in
+  `predictions.jsonl`), LLM calls, summed LLM latency, prompt and completion tokens, and
+  executed tool calls; reported as mean, median and total over the appeals. The task
+  metrics are unchanged. On Kaggle, wall time per appeal is the GPU time per appeal.
+
+## 11. Retrieval and verifier (R1-R3, mid-submission)
+
+- **In-force announcements first** (`retrieval/course_docs.py`): when course-doc search
+  returns an announcement that a later one supersedes, the announcement now in force is
+  placed directly before it, even if it scored lower or did not match the query. This
+  changes what `search_course_docs` returns compared with the mid-submission runs
+  (`results/mid_dev/`, recorded at commit bd849fa).
+- **Precedent store** (`retrieval/precedents.py`): past decisions as JSON lines
+  (`Precedent`: id, assignment, target, neutral issue text, outcome, delta, rationale),
+  searched with BM25 over issue, target and rationale within the same assignment; a result
+  must share a word with the query. BM25Plus is used because BM25Okapi's scores collapse
+  in a store of a few documents. `search_precedents` uses the store named by
+  `retrieval: {precedents: <file.jsonl>}` in the config; without it the store is empty,
+  as in all runs so far. Filling it (team-written precedents, the agent's own decisions
+  for RQ2) is still to do.
+- **BM25 only for now**; the embedding model from the proposal is a final-submission
+  task (another dependency and a model download).
+- **Evidence bundle and verifier format** (`agent/schemas.py`, `verifier/format.py`): see
+  `docs/VERIFIER_PLAN.md`. The verifier answers JSON with a verdict and the evidence id it
+  relies on; one prompt function serves training and inference.
+- **QLoRA libraries are an optional `gpu` extra** (`transformers`, `peft`, `bitsandbytes`,
+  `accelerate`), installed only on Kaggle; team-approved. `trl` and `datasets` are not
+  needed: `verifier/train.py` uses a short custom loop, which also avoids `trl`'s frequent
+  API changes. The GPU imports are inside `train()`, so tests and CI do not need them.
+- **The verifier is trained on the answer tokens only**; examples longer than
+  `max_length` are skipped and counted, never truncated (cutting the prompt would drop
+  the claim or evidence).

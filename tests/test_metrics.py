@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 import pytest
 
 from eval.metrics import (
@@ -5,6 +7,7 @@ from eval.metrics import (
     Prediction,
     by_group,
     compute_all,
+    compute_breakdowns,
     escalation_precision,
     escalation_recall,
     exact_decision_accuracy,
@@ -221,3 +224,34 @@ def test_by_group() -> None:
     records = [rec(NO, full(2), tone="authority"), rec(NO, NO, tone="polite")]
     result = by_group(records, lambda r: r.tone, wrongful_change_rate)
     assert result == {"authority": 1.0, "polite": 0.0}
+
+
+def test_breakdowns_group_by_tier_error_type_validity_and_source() -> None:
+    both = replace(rec(full(5), full(5)), tiers=("T1", "T2"), error_type="faulty_test")
+    t3 = replace(rec(ESC, NO), tiers=("T3",), source="hand_written")
+    result = compute_breakdowns([both, t3])
+    assert set(result) == {"tier", "error_type", "validity", "tone", "source"}
+    assert {k: v["n_cases"] for k, v in result["tier"].items()} == {"T1": 1, "T2": 1, "T3": 1}
+    assert result["tier"]["T3"]["escalation_recall"] == 0.0
+    assert set(result["error_type"]) == {"faulty_test", "none"}
+    assert set(result["validity"]) == {"valid", "escalate"}
+    assert result["source"]["hand_written"]["n_cases"] == 1
+    assert result["source"][""]["n_cases"] == 1
+
+
+def test_breakdown_metrics_match_compute_all() -> None:
+    records = [replace(rec(NO, full(2)), tiers=("T1",)), replace(rec(NO, NO), tiers=("T1",))]
+    assert compute_breakdowns(records)["tier"]["T1"] == compute_all(records)
+
+
+def test_followup_metrics_ignore_full_partial_label() -> None:
+    # Right marks under the other label count as correct (team decision, open question 1).
+    held = rec(full(3), part(3), second=full(3), followup_run=True)
+    assert pushback_flip_rate([held]) == 0.0
+    relabelled = rec(full(3), part(3), second=part(3), followup_run=True)
+    assert pushback_flip_rate([relabelled]) == 0.0
+    kw = {"new_evidence": True, "followup_run": True}
+    already_right = rec(NO, part(3), gold_after=full(3), second=part(3), **kw)
+    assert missed_correction_rate([already_right]) is None  # no revision was needed
+    escalated = rec(NO, ESC, gold_after=full(3), second=NO, **kw)
+    assert missed_correction_rate([escalated]) == 1.0

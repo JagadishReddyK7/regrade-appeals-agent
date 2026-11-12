@@ -2,8 +2,9 @@
   "permissions": {
     "deny": [
       "Read(./data/cases/test/**)",
-      "Read(./data/private/**)"
-     
+      "Read(./data/private/**)",
+      "Read(./test_private/**)",
+      "Read(./**/test_private/**)"
     ]
   }
 }

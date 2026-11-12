@@ -1,0 +1,43 @@
+# Full system, fine-tuned 3B verifier (main system).
+# Test run (docs/DECISIONS.md section 15): configs/pipeline_ft_dev.yaml with only name,
+# cases, data_root changed. data/private: the private test dataset.
+name: pipeline_test
+system: pipeline
+cases: data/private/cases/test
+data_root: data/private
+output_dir: runs
+seed: 0
+temperature: 0.0
+followup: true          # one follow-up (pushback) turn after the first decision
+llm:
+  backend: openai       # an OpenAI-compatible server, e.g. vLLM on Kaggle
+  base_url: http://localhost:8000/v1
+  model: Qwen/Qwen2.5-7B-Instruct-AWQ
+  timeout_s: 120
+  max_tokens: 1024       # cap per reply: a runaway reply timed out a case (dev-012)
+  serve:                # how llm.serve starts vLLM (Kaggle T4: float16, no bfloat16)
+    gpu: 0
+    port: 8000
+    dtype: half
+    quantization: awq
+    max_model_len: 16384
+    gpu_memory_utilization: 0.85
+    tool_call_parser: hermes
+pipeline:
+  max_tool_calls: 10             # per turn, evidence agent (the grade report E1 included)
+  escalate_below_confidence: 0.0 # 0: never escalate for low aggregator confidence
+verifier:
+  llm:                  # the fine-tuned 3B (merged adapter) on the second T4
+    backend: openai
+    base_url: http://localhost:8001/v1
+    model: /kaggle/temp/verifier-ft   # the merged model folder (notebooks/verifier_ft.ipynb)
+    timeout_s: 60
+    max_tokens: 64
+    serve:
+      gpu: 1
+      port: 8001
+      dtype: half
+      max_model_len: 8192
+      gpu_memory_utilization: 0.85
+sandbox:
+  cache_dir: sandbox/cache

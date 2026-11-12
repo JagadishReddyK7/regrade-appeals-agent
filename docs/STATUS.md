@@ -88,6 +88,7 @@ LLM judge, the test set and human labelling. The test-set scope is reduced in
 | Baseline B0, result breakdowns | `baselines/b0.py`, `eval/metrics.py` | always reject / always accept, no LLM; `metrics.json` breakdowns by tier, error type, validity, tone, source (E2) |
 | Statistics | `eval/stats.py` | paired permutation tests by situation, Holm, bootstrap CIs; `python -m eval.stats <run> <run> ...` (E3) |
 | Kaggle dev-run notebook | `notebooks/pilot_dev.ipynb` | runs B0, B1, the agent and the three ablations from one account (vLLM pinned to 0.32.0) |
+| Test-run notebook | `notebooks/test_runs.ipynb`, `configs/*_test.yaml` | every system on the frozen test set; aggregates (`test_metrics.zip`) separate from per-case logs (`test_private.zip`); `docs/DECISIONS.md` section 15 |
 | Mid-submission results | `results/mid_dev/` | the seven dev runs with configs, metrics, predictions and full event logs |
 | CI | `.github/workflows/tests.yml` | lint, validator, tests on Python 3.11 and 3.13 |
 

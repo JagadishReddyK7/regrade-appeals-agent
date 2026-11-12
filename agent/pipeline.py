@@ -47,7 +47,7 @@ from data.formats import TOTAL_ID
 from eval.runlog import RunLogger
 from llm.client import ChatResponse, LLMClient, Message, ToolCall
 from llm.parsing import validate_tool_arguments
-from verifier.format import bundle_for_claim
+from verifier.format import bundle_for_claim, evidence_items
 from verifier.infer import verify_claim
 
 MAX_TOOL_CALLS = 10
@@ -273,6 +273,21 @@ class EvidenceAgent:
         return content
 
 
+def is_policy_or_open(target: str | None) -> bool:
+    """A T3 claim goes to a human without a verifier call only if it disputes a policy
+    (e.g. an exception to the late penalty) or no item; claims on a test, rubric item or
+    the total can always be checked against evidence, so the verifier sees them."""
+    return target is None or target.startswith("policy:")
+
+
+def supersede(earlier: list[ClaimResult], fresh: list[ClaimResult]) -> list[ClaimResult]:
+    """The claims the follow-up turn decides on: the earlier claims with their turn-1
+    verdicts, except those on an item that a new claim is supported on (the new evidence
+    replaces them), plus the new claims."""
+    supported = {r.claim.target for r in fresh if r.verdict == "supported" and r.claim.target}
+    return [*[r for r in earlier if r.claim.target not in supported], *fresh]
+
+
 class ClaimPipeline:
     def __init__(
         self,
@@ -307,10 +322,11 @@ class ClaimPipeline:
             self._log_decision(1, None, "extraction_failed")
             return self.result
         self.agent.first_turn(self.case, claims)
-        self.result.decision, self.result.status = self._decide(claims, turn=1)
+        results = [self._verify(claim, turn=1) for claim in claims]
+        self.result.decision, self.result.status = self._decide(results, turn=1)
         if self.options.followup and self.result.decision is not None:
             try:
-                self._followup(claims)
+                self._followup(claims, results)
             except Exception as exc:  # a server error is not a change of mind
                 self.logger.log("followup_error", error=repr(exc))
                 self.result.followup_run = False
@@ -318,9 +334,9 @@ class ClaimPipeline:
                 self.result.followup_status = None
         return self.result
 
-    def _followup(self, claims: list[ExtractedClaim]) -> None:
+    def _followup(self, claims: list[ExtractedClaim], earlier: list[ClaimResult]) -> None:
         text = self.case.followup.text
-        new = self._claims(text, "F", FOLLOWUP_CLAIM_ID, turn=2)
+        new = self._claims(text, "F", FOLLOWUP_CLAIM_ID, turn=2, previous=claims)
         self.result.followup_run = True
         if new is None:
             self.result.followup_status = "extraction_failed"
@@ -333,11 +349,17 @@ class ClaimPipeline:
             return
         self.agent.followup_turn(text, new)
         self.tools.withdraw_proposals("decided again after the student's follow-up")
-        decision, status = self._decide([*claims, *new], turn=2)
+        fresh = [self._verify(claim, turn=2) for claim in new]
+        decision, status = self._decide(supersede(earlier, fresh), turn=2)
         self.result.followup_decision, self.result.followup_status = decision, status
 
     def _claims(
-        self, text: str, prefix: str, whole_id: str, turn: int
+        self,
+        text: str,
+        prefix: str,
+        whole_id: str,
+        turn: int,
+        previous: list[ExtractedClaim] | None = None,
     ) -> list[ExtractedClaim] | None:
         if not self.options.claim_splitting:
             claims = [ExtractedClaim(id=whole_id, span=text, target=None, tier="T2")]
@@ -349,6 +371,7 @@ class ClaimPipeline:
                 self.tools.deducted,
                 self.logger,
                 prefix=prefix,
+                previous=previous,
                 temperature=self.temperature,
                 seed=self.seed,
             )
@@ -356,15 +379,13 @@ class ClaimPipeline:
             self.logger.log("claims", turn=turn, claims=[c.model_dump() for c in claims])
         return claims
 
-    def _decide(
-        self, claims: list[ExtractedClaim], turn: int
-    ) -> tuple[Decision | None, TurnStatus]:
-        results = [self._verify(claim, turn) for claim in claims]
+    def _decide(self, results: list[ClaimResult], turn: int) -> tuple[Decision | None, TurnStatus]:
         aggregation = aggregate(
             self.client,
             results,
             self.tools.deducted,
             self.logger,
+            evidence=evidence_items(self.result.evidence),
             escalation=self.options.escalation,
             temperature=self.temperature,
             seed=self.seed,
@@ -377,7 +398,7 @@ class ClaimPipeline:
         return decision, "submitted"
 
     def _verify(self, claim: ExtractedClaim, turn: int) -> ClaimResult:
-        if claim.tier == "T3" and self.options.escalation:
+        if claim.tier == "T3" and self.options.escalation and is_policy_or_open(claim.target):
             result = ClaimResult(claim, "needs_human", None, None)
             self._log_verdict(turn, result, source="tier")
             return result

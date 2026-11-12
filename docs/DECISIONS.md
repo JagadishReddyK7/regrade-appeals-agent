@@ -382,10 +382,19 @@ unchanged as the whole-appeal tool agent (B3).
   A4b); `verifier.llm` in the config points it at another server (untuned 3B, A4a, or the
   fine-tuned 3B). Fine-tuning is the main verifier in the proposal; whether it makes the
   final runs is decided on Nov 13.
-- **T3 claims go to a human without a verifier call** when escalation is available; the
-  tier comes from the extractor.
+- **T3 claims go to a human without a verifier call only if they dispute a policy or no
+  item** (and escalation is available). A claim on a test, rubric item or the total can
+  always be checked, so the verifier sees it even when the extractor called it T3: in the
+  first run (`results/pipeline_dev_v1/`) the extractor tagged "please check the addition"
+  and claims citing a senior as T3, and the pipeline over-escalated (0.35). The extractor
+  prompt now also says that what another person says does not make a claim T3.
 - **An invalid verifier answer counts as `needs_human`** (escalate: "unclear cases go to a
   TA"), logged as `invalid_output` and as a `verdict` event with `valid: false`.
+- **The aggregator sees all evidence of the appeal** (not only the items the verifier
+  cited), so it can apply a partial-credit rule found by search; its `item_id` is
+  restricted by the JSON schema to the items with deducted marks (in A0 it invented
+  `approach` and `style`). The verifier's `evidence_id` is likewise restricted to the
+  bundle's ids at inference (training keeps the plain format).
 - **The aggregator's rules are code; only the amount is the model's.** Escalate if any
   claim needs a human; no change, without a model call, if no claim is supported;
   otherwise the 7B proposes restorations, checked in code (supported claims only, on the
@@ -397,11 +406,20 @@ unchanged as the whole-appeal tool agent (B3).
   (logged as `tool_call` with `actor: pipeline`). Proposals therefore always use valid
   ids, the cap is checked twice, and escalations always reach the TA log (closes open
   question 6 for the pipeline).
-- **Follow-up**: the extractor reads the follow-up for new claims (ids F1, ...). With no
-  new claim (pressure only) the first decision stands without further calls. Otherwise
-  the agent gathers more evidence in the same conversation with a fresh budget, every
-  claim is verified again with all evidence, the turn-1 proposals are withdrawn
-  (`proposals_withdrawn` in the proposals log) and the aggregator decides again.
+- **Follow-up**: the extractor reads the follow-up with the earlier claims and is asked
+  only for claims that bring new evidence (a document, announcement, test, input or
+  fact); repetition, insistence and opinions give an empty list, and then the first
+  decision stands without further calls. Otherwise the agent gathers more evidence in the
+  same conversation with a fresh budget, **only the new claims are verified**, a new
+  claim supported on an item replaces the earlier verdicts on that item, the turn-1
+  proposals are withdrawn (`proposals_withdrawn` in the proposals log) and the aggregator
+  decides again. Re-verifying every claim (the first version) let unrelated new evidence
+  flip an earlier verdict (dev-006).
+- **Announcement dates are searchable**: BM25 indexes the date as `2026-09-19 19
+  September 2026` (fixed English month names, not the locale), so "the 19 September
+  announcement" finds it. This also changes agent v0's search results.
+- **`llm.max_tokens`** (optional, `OpenAIBackend`) caps each reply; the pipeline configs
+  use 1024 after a runaway reply timed out a case.
 - **Ablations**: `no_claim_splitting` (A0: the whole appeal is one claim, id `appeal`, no
   target; the follow-up is one claim, id `followup`), `no_code_execution` (A1),
   `no_retrieval` (A2), `no_escalation` (A6: `needs_human` claims become eligible for the

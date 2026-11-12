@@ -45,7 +45,9 @@ LLM judge, the test set and human labelling. The test-set scope is reduced in
 ## Since the mid-submission (Nov 11)
 - **Claim pipeline built** (`agent/pipeline.py`, `docs/DECISIONS.md` section 12): extractor,
   evidence agent, prompted verifier, aggregator, follow-up turn; ablations A0, A1, A2, A6 as
-  flags; tested with the mock backend only. **Not yet run on Kaggle.**
+  flags. First Kaggle dev run (Nov 12, `results/pipeline_dev_v1/`): 0.33 exact accuracy
+  vs 0.62 for B1 and agent v0, from over-escalation, pressure taken as new claims and wrong
+  targets; fixed the same day (`docs/DECISIONS.md` section 12), **second dev run pending**.
 - Fixes from `results/mid_dev_24/`: arithmetic check in `get_grade_report`, follow-up errors
   keep the first decision (agent v0), B1 may cite `followup`, rejected proposals list valid
   item ids.

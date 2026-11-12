@@ -28,13 +28,28 @@ For each claim give:
 - "span": the claim copied exactly from the text, as one continuous piece (do not \
 rephrase or shorten words inside it);
 - "target": the id of the graded item it disputes, from the list below, or null if none \
-fits; use "total" if the student says the marks were added up wrongly;
-- "tier": "T1" if it can be checked by running the code or the tests, "T2" if it is about \
-the rubric, a policy or an announcement, "T3" if it needs a human judgement (illness, \
-personal circumstances, an extension, something a staff member promised).
+fits. Prefer an item that has marks deducted. A claim about the rules or the approach of \
+the assignment (for example which techniques are allowed) disputes a rubric item, not a \
+test. Use "total" if the student says the marks were added up wrongly;
+- "tier": "T1" if it is about a test result or what the code does (it can be checked by \
+running the code); "T2" if it is about the rubric, a policy, an announcement or how the \
+marks were added up; "T3" only if deciding it needs facts about the student's personal \
+situation that no course document, test or grade report can show (illness, a family \
+emergency, an extension request, a private promise by staff). What another person says \
+(a senior, a former TA, a department head) does not make a claim T3: judge the claim \
+itself.
 
 Answer with a JSON object {{"claims": [...]}}; the list may be empty if the text makes no \
 claim."""
+
+FOLLOWUP_RULE = """
+
+The text is the student's reply after the decision on these earlier claims:
+{previous}
+Extract only claims that bring new evidence not in the earlier claims: a specific \
+announcement, document, test, input or fact that can be checked. Repeating or insisting on \
+an earlier claim, expressing feelings, or citing someone's opinion is not a new claim; if \
+the reply has no new evidence, answer with an empty list."""
 
 
 def items_text(deducted: dict[str, float], descriptions: dict[str, str]) -> str:
@@ -74,13 +89,18 @@ def extract_claims(
     deducted: dict[str, float],
     logger: RunLogger,
     prefix: str = "C",
+    previous: list[ExtractedClaim] | None = None,
     temperature: float = 0.0,
     seed: int = 0,
 ) -> list[ExtractedClaim] | None:
-    """Claims in `text`, or None if the model gave no valid answer in MAX_ATTEMPTS."""
+    """Claims in `text`, or None if the model gave no valid answer in MAX_ATTEMPTS. With
+    `previous` (the follow-up turn), only claims with new evidence are asked for."""
     targets = list(descriptions)
+    system = SYSTEM_PROMPT.format(prefix=prefix)
+    if previous is not None:
+        system += FOLLOWUP_RULE.format(previous=claims_text(previous) or "(none)")
     messages: list[Message] = [
-        {"role": "system", "content": SYSTEM_PROMPT.format(prefix=prefix)},
+        {"role": "system", "content": system},
         {
             "role": "user",
             "content": f"Graded items:\n{items_text(deducted, descriptions)}\n\n"

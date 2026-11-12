@@ -8,14 +8,23 @@ import pytest
 
 from agent.aggregator import ClaimResult, check_restorations
 from agent.extractor import check_claims, output_schema
-from agent.pipeline import PipelineOptions, PipelineResult, run_pipeline
-from agent.schemas import AggregatorOutput, Case, ExtractedClaim, ExtractorOutput, Restoration
+from agent.pipeline import PipelineOptions, PipelineResult, run_pipeline, supersede
+from agent.schemas import (
+    AggregatorOutput,
+    Case,
+    EvidenceBundle,
+    EvidenceItem,
+    ExtractedClaim,
+    ExtractorOutput,
+    Restoration,
+)
 from agent.tools import ToolBox
 from eval.run import PipelineSystem, build_system, load_config, run_eval
 from eval.runlog import RunContext, RunLogger, read_events
 from llm.client import ChatResponse, LLMClient, MockLLM, ToolCall
 from sandbox.cache import ResultCache
 from sandbox.runner import SandboxRunner
+from verifier.infer import output_schema as verifier_schema
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data"
@@ -215,18 +224,61 @@ def test_followup_with_new_claim_decides_again(
         FINISH,
         restore(("C1", "test_empty_string", 5)),
     ]
-    verifier = [verdict("supported", "E1"), verdict("refuted", "E1")] + [
-        verdict("supported", "E1"),
-        verdict("refuted", "E1"),
-        verdict("refuted", "E2"),
-    ]
-    result, main, _ = run("dev-001", script, runner, logs, verifier)
+    # Turn 2 verifies only the new claim; the earlier verdicts stand.
+    verifier = [verdict("supported", "E1"), verdict("refuted", "E1"), verdict("refuted", "E2")]
+    result, main, check = run("dev-001", script, runner, logs, verifier)
     assert result.followup_decision is not None and result.followup_decision.delta == 5
     assert [v.claim_id for v in result.followup_decision.verdicts] == ["C1", "C2", "F1"]
+    assert len(check.requests) == 3
+    # The follow-up extractor is told the earlier claims and asked for new evidence only.
+    assert "new evidence" in main.requests[3]["messages"][0]["content"]
+    assert C1_SPAN in main.requests[3]["messages"][0]["content"]
     # The second evidence turn continues the first conversation.
     assert "New claims" in main.requests[4]["messages"][-1]["content"]
     assert len(read_events(tmp_path / "proposals.jsonl", "proposals_withdrawn")) == 1
     assert result.tool_calls == 4  # E1, finish; search, finish
+
+
+def test_supported_new_claim_supersedes_earlier_verdict_on_same_item() -> None:
+    def result(cid: str, target: str, v: str) -> ClaimResult:
+        return ClaimResult(ExtractedClaim(id=cid, span="s", target=target, tier="T2"), v, "E1", "t")
+
+    earlier = [result("C1", "test_a", "supported"), result("C2", "rubric:style", "refuted")]
+    kept = supersede(earlier, [result("F1", "rubric:style", "supported")])
+    assert [r.claim.id for r in kept] == ["C1", "F1"]
+    kept = supersede(earlier, [result("F1", "rubric:style", "refuted")])
+    assert [r.claim.id for r in kept] == ["C1", "C2", "F1"]
+
+
+def test_t3_on_checkable_item_goes_to_verifier(
+    runner: SandboxRunner, logs: tuple[RunLogger, RunLogger]
+) -> None:
+    span = "the total should be 30, but it shows 28. Could you please check the addition?"
+    case = next(
+        c
+        for c in map(load_case, (p.stem for p in sorted(DEV.glob("*.json"))))
+        if c.situation_id == "D1-sit06" and span in c.appeal_text
+    )
+    script = [claims(("C1", span, "total", "T3")), FINISH, restore(("C1", "total", 2))]
+    options = PipelineOptions(followup=False)
+    result, _, check = run(
+        case.case_id, script, runner, logs, [verdict("supported", "E1")], options
+    )
+    assert len(check.requests) == 1
+    assert result.decision is not None and result.decision.delta == 2
+
+
+def test_aggregator_schema_restricts_items_and_sees_all_evidence(
+    runner: SandboxRunner, logs: tuple[RunLogger, RunLogger]
+) -> None:
+    script = [EXTRACT_001, call("get_submission"), FINISH, restore(("C1", "test_empty_string", 5))]
+    verifier = [verdict("supported", "E1"), verdict("refuted", "E1")]
+    _, main, _ = run("dev-001", script, runner, logs, verifier, PipelineOptions(followup=False))
+    request = main.requests[-1]
+    schema = request["response_format"]["json_schema"]["schema"]
+    items = schema["$defs"]["Restoration"]["properties"]["item_id"]["enum"]
+    assert "rubric:style" in items and "style" not in items
+    assert "[E2] from get_submission" in request["messages"][1]["content"]
 
 
 def test_followup_error_keeps_first_decision(
@@ -379,3 +431,11 @@ def test_load_config_pipeline(tmp_path: Path) -> None:
 def test_pipeline_configs_load(name: str) -> None:
     config = load_config(ROOT / "configs" / f"{name}.yaml")
     assert config["system"] == "pipeline"
+
+
+def test_verifier_schema_restricts_evidence_ids() -> None:
+    bundle = EvidenceBundle(
+        claim="c", target=None, evidence=[EvidenceItem(id="E1", source="s", text="t")]
+    )
+    allowed = verifier_schema(bundle)["properties"]["evidence_id"]["anyOf"]
+    assert allowed == [{"enum": ["E1"]}, {"type": "null"}]

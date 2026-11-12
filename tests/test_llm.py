@@ -172,3 +172,11 @@ def test_tool_arguments_validated(logger: RunLogger, log_path: Path) -> None:
     assert validate_tool_arguments(call, ClaimVerdict, logger) is None
     (record,) = read_events(log_path, "invalid_output")
     assert record["kind"] == "tool_call:submit_verdict"
+
+
+def test_backend_config_passes_max_tokens() -> None:
+    pytest.importorskip("openai")
+    config = {"base_url": "http://localhost:1/v1", "model": "m", "max_tokens": 256}
+    assert backend_from_config(config).max_tokens == 256  # type: ignore[attr-defined]
+    unlimited = backend_from_config({**config, "max_tokens": None})
+    assert unlimited.max_tokens is None  # type: ignore[attr-defined]

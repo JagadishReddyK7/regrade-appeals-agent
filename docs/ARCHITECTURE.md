@@ -57,13 +57,13 @@ ClaimPipeline.run()
                                      (A0: the whole appeal is one claim)
     EvidenceAgent.first_turn()       grade report loaded as E1, then a tool loop with the
                                      read-only tools + finish_evidence (10 calls per turn)
-    verify_claim(claim, all evidence) verifier/infer.py   T3 claims -> needs_human directly
+    verify_claim(claim, all evidence) verifier/infer.py   T3 policy claims -> needs_human
     aggregate(verdicts)              agent/aggregator.py  rules in code, amounts from the 7B
     propose_grade_change / escalate_to_ta, called by the pipeline -> Decision (one verdict
                                      per claim)
-  turn 2 (follow-up): extract new claims; none -> first decision stands; else more evidence
-    (same conversation, fresh budget), verify all claims, withdraw turn-1 proposals,
-    aggregate again
+  turn 2 (follow-up): extract claims with new evidence only; none -> first decision stands;
+    else more evidence (same conversation, fresh budget), verify the new claims (a supported
+    one replaces earlier verdicts on its item), withdraw turn-1 proposals, aggregate again
   -> PipelineResult(decision, followup_decision | None, counters)
 ```
 The verifier's client uses the main backend unless `verifier.llm` names another server.

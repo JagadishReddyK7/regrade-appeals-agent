@@ -13,8 +13,16 @@ The rules are code; only the amount of marks to restore is the model's judgement
 import json
 import math
 from dataclasses import dataclass
+from typing import Any
 
-from agent.schemas import AggregatorOutput, ExtractedClaim, Outcome, Restoration, Verdict
+from agent.schemas import (
+    AggregatorOutput,
+    EvidenceItem,
+    ExtractedClaim,
+    Outcome,
+    Restoration,
+    Verdict,
+)
 from eval.runlog import RunLogger
 from llm.client import LLMClient, Message
 from llm.parsing import parse_json_output
@@ -66,6 +74,8 @@ def check_restorations(
     by_id = {r.claim.id: r.claim for r in claims}
     given: dict[str, float] = {}
     for r in output.restorations:
+        if r.item_id not in deducted:
+            return f"no marks were deducted on {r.item_id!r}; deducted per item: {deducted}"
         claim = by_id.get(r.claim_id)
         if claim is None:
             return f"claim {r.claim_id!r} is not eligible; eligible: {sorted(by_id)}"
@@ -78,7 +88,17 @@ def check_restorations(
     return None
 
 
-def user_message(claims: list[ClaimResult], deducted: dict[str, float]) -> str:
+def output_schema(items: list[str]) -> dict[str, Any]:
+    """AggregatorOutput's JSON schema with `item_id` restricted to the items with deducted
+    marks, so the model cannot name an item that does not exist."""
+    schema = AggregatorOutput.model_json_schema()
+    schema["$defs"]["Restoration"]["properties"]["item_id"] = {"enum": items}
+    return schema
+
+
+def user_message(
+    claims: list[ClaimResult], deducted: dict[str, float], evidence: list[EvidenceItem]
+) -> str:
     lines = ["Eligible claims:"]
     for r in claims:
         entry = {
@@ -91,6 +111,8 @@ def user_message(claims: list[ClaimResult], deducted: dict[str, float]) -> str:
         lines.append(json.dumps(entry))
     items = ", ".join(f"{item}: {marks:g}" for item, marks in deducted.items()) or "none"
     lines.append(f"\nMarks deducted per item in the grade report: {items}")
+    lines.append("\nAll evidence gathered for the appeal:")
+    lines.extend(f"[{item.id}] from {item.source}:\n{item.text}" for item in evidence)
     return "\n".join(lines)
 
 
@@ -99,6 +121,7 @@ def aggregate(
     results: list[ClaimResult],
     deducted: dict[str, float],
     logger: RunLogger,
+    evidence: list[EvidenceItem] | None = None,
     escalation: bool = True,
     temperature: float = 0.0,
     seed: int = 0,
@@ -109,14 +132,16 @@ def aggregate(
     claims = eligible(results, escalation)
     if not claims:
         return Aggregation("no_change", [], "no claim is supported by the evidence", 1.0)
+    if not deducted:
+        return Aggregation("no_change", [], "the grade report deducted no marks", 1.0)
     messages: list[Message] = [
         {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": user_message(claims, deducted)},
+        {"role": "user", "content": user_message(claims, deducted, evidence or [])},
     ]
     for _ in range(MAX_ATTEMPTS):
         response = client.chat(
             messages,
-            json_schema=AggregatorOutput.model_json_schema(),
+            json_schema=output_schema(sorted(deducted)),
             temperature=temperature,
             seed=seed,
         )

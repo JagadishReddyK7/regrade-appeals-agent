@@ -147,11 +147,17 @@ def to_chat_response(completion: Any) -> ChatResponse:
 
 class OpenAIBackend:
     def __init__(
-        self, base_url: str, model: str, api_key: str = "EMPTY", timeout_s: float = 120.0
+        self,
+        base_url: str,
+        model: str,
+        api_key: str = "EMPTY",
+        timeout_s: float = 120.0,
+        max_tokens: int | None = None,
     ) -> None:
         from openai import OpenAI  # imported lazily so tests never need a server
 
         self.model = model
+        self.max_tokens = max_tokens  # cap per reply, so a rambling reply cannot time out
         self._client = OpenAI(base_url=base_url, api_key=api_key, timeout=timeout_s)
 
     def complete(
@@ -163,6 +169,8 @@ class OpenAIBackend:
         seed: int,
     ) -> ChatResponse:
         request = build_request(self.model, messages, tools, json_schema, temperature, seed)
+        if self.max_tokens is not None:
+            request["max_tokens"] = self.max_tokens
         return to_chat_response(self._client.chat.completions.create(**request))
 
 
@@ -199,8 +207,8 @@ class MockLLM:
 def backend_from_config(config: dict[str, Any]) -> Backend:
     """Build the OpenAI-compatible backend from an `llm` config section.
 
-    Expected keys: base_url, model; optional api_key, timeout_s. The mock backend needs a
-    script, so tests construct MockLLM directly.
+    Expected keys: base_url, model; optional api_key, timeout_s, max_tokens. The mock
+    backend needs a script, so tests construct MockLLM directly.
     """
     kind = config.get("backend", "openai")
     if kind != "openai":
@@ -210,4 +218,5 @@ def backend_from_config(config: dict[str, Any]) -> Backend:
         model=config["model"],
         api_key=config.get("api_key", "EMPTY"),
         timeout_s=float(config.get("timeout_s", 120.0)),
+        max_tokens=int(config["max_tokens"]) if config.get("max_tokens") else None,
     )

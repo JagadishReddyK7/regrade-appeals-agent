@@ -1,0 +1,16 @@
+name: verifier_train
+model: Qwen/Qwen2.5-3B-Instruct
+data: runs/verifier_train.jsonl   # written by `python -m verifier.train_data`
+output_dir: runs
+seed: 0
+max_steps: 300                    # about one epoch of the 594 examples at batch size 2
+batch_size: 2
+learning_rate: 1.0e-4
+max_length: 4096                  # the longest prompt is about 2,500 tokens
+check_examples: 6
+merge: true                       # save merged/ for vLLM
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules: [q_proj, k_proj, v_proj, o_proj]

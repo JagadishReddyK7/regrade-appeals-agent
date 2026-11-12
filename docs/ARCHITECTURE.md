@@ -105,7 +105,9 @@ The verifier's client uses the main backend unless `verifier.llm` names another 
 | `retrieval/precedents.py` | `Precedent`, `PrecedentStore` (JSONL, BM25 per assignment) |
 | `verifier/format.py` | verifier prompt and answer format, evidence bundles |
 | `verifier/infer.py` | `verify_claim`: one bundle -> `VerifierOutput` |
-| `verifier/train.py`, `verifier/dummy_data.py` | QLoRA training (GPU), dummy examples |
+| `verifier/train.py`, `verifier/dummy_data.py` | QLoRA training (GPU; `merge` saves a merged model for vLLM), dummy examples |
+| `verifier/train_data.py` | training data from `data/verifier_train/*.yaml` on TR1/TR2: real tool evidence, tone pairs, held-out authority tone |
+| `verifier/eval_data.py`, `verifier/evaluate.py` | evaluation claims rebuilt from a pipeline run's events; accuracy, macro-F1, tone sensitivity of a served verifier |
 | `sandbox/runner.py`, `sandbox/harness.py` | `SandboxRunner.run_test` / `run_code`; the child process that applies limits and blocks |
 | `sandbox/cache.py`, `sandbox/result.py` | result cache; `RunResult` |
 

@@ -1,0 +1,47 @@
+# Training-only assignment for the verifier's training data (docs/VERIFIER_PLAN.md).
+# Never used for evaluation or prompt tuning.
+id: TR1
+title: List statistics
+module: list_stats.py
+tests_file: test_list_stats.py
+reference_autograder: standard
+autograders:
+  standard: autograder/standard
+  faulty_strict: autograder/faulty_strict  # planted: test_count_above_strict counts equal values
+rubric:
+  - id: test_mean_basic
+    kind: test
+    marks: 4
+    description: mean returns the average of a list
+  - id: test_mean_empty
+    kind: test
+    marks: 4
+    description: mean returns 0.0 for an empty list
+  - id: test_median_odd
+    kind: test
+    marks: 4
+    description: median of an odd-length list is the middle value
+  - id: test_median_even
+    kind: test
+    marks: 4
+    description: median of an even-length list is the average of the two middle values
+  - id: test_count_above_basic
+    kind: test
+    marks: 4
+    description: count_above counts values above the threshold
+  - id: test_count_above_strict
+    kind: test
+    marks: 4
+    description: count_above counts only values strictly greater than the threshold
+  - id: "rubric:style"
+    kind: manual
+    marks: 3
+    description: Every function has a docstring
+  - id: "rubric:approach"
+    kind: manual
+    marks: 3
+    description: Follows the approach rules in the specification and announcements
+policies:
+  - id: "policy:late_penalty"
+    marks: 10
+    description: Late submissions lose 10 marks; extensions are decided by course staff

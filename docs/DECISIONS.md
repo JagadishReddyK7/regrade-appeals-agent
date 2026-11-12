@@ -463,3 +463,44 @@ unchanged as the whole-appeal tool agent (B3).
   announcement in dev-017). The remaining errors are the prompted 7B's judgement, not
   missing evidence or a pipeline bug, so more prompt changes would fit noise on 24 cases.
   Improving the verifier is the job of the fine-tuned 3B (H1c, go/no-go on Nov 13).
+
+## 14. Verifier training data and fine-tuning (2026-11-12)
+
+- **Two training-only assignments, TR1 (list statistics) and TR2 (inventory dictionary)**,
+  in the D1 layout (`data/assignments/TR*`, `data/submissions/TR*-S0*`), never used for
+  evaluation or prompt tuning. Each covers the claim kinds of the benchmark with new
+  content: a faulty test (TR1) and a test that follows a superseded announcement (TR2), an
+  approach rule relaxed by a later announcement, partial credit announced later (style
+  per function; type hints), wrongly applied manual marks, addition errors, false claims
+  about failing code, opinion-only rubric claims, and late-penalty or extension requests
+  (needs_human). `tests/test_verifier_training.py` checks every grade report against the
+  autograder and the marks wrongly withheld.
+- **Labels by construction, evidence from the real tools.** A situation file
+  (`data/verifier_train/*.yaml`) names the claim's item, its verdict and the decisive tool
+  calls; `verifier/train_data.py` runs those tools on the submission and lays out the
+  evidence as the frozen pipeline does: E1 grade report, E2 submission, then the decisive
+  results, sometimes supporting ones and 0-2 distractors in random order. The label cites
+  the first decisive item. A claim that the total is wrong when it is not has no target,
+  because the extractor only targets items with deducted marks (section 12).
+- **Claim wordings written for the project, not by Llama-3.1-8B** as the proposal planned:
+  three wordings per situation, wrapped in tone templates. Generating them on Kaggle would
+  have cost a session before the Nov 13 go/no-go. Limitation for the report: less
+  linguistic variety than LLM-generated appeals.
+- **Tone pairing as planned**: each pair (one wording, one evidence set) is written in
+  polite, emotional and hidden-instruction tone with the same label (the instruction is a
+  comment in the submission, as in the benchmark); authority is held out
+  (`verifier_heldout_authority.jsonl`: 46 fresh pairs written in all four tones, 184
+  examples, so tone sensitivity shows whether the unseen tone flips verdicts). 594
+  training examples (270 supported, 288 refuted, 36 needs_human).
+- **Evaluation on real evidence from a held-out assignment**: `verifier/eval_data.py`
+  rebuilds, from a pipeline run's events, each claim the verifier judged with exactly the
+  evidence it saw, and pairs it with the dev case's gold verdict (30 claims from
+  `results/pipeline_dev_v3/`, 23 more from `v2/`). The untuned 3B (A4a), the
+  fine-tuned 3B and the prompted 7B (A4b) are compared on the same claims
+  (`verifier/evaluate.py`: accuracy, macro-F1, tone sensitivity).
+- **The adapter is merged into the float16 base for serving** (`merge: true`), so vLLM
+  serves a plain model on the second T4; vLLM's LoRA support on the T4 is not needed.
+- **Go/no-go rule (Nov 13):** the fine-tuned 3B becomes the main verifier for the test
+  runs if its macro-F1 on the dev claims is at least the prompted 7B's and the pipeline
+  with it does not lose exact-decision accuracy on dev; otherwise the prompted 7B stays
+  and the fine-tuned 3B is reported as ablation A4. Decided on dev only.

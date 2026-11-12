@@ -1,9 +1,12 @@
 # Claim verifier: design, training data and plan
 
-Status (mid-submission): the input/output format, the prompt, a dummy-data generator and
-the QLoRA training script are built and tested; the Kaggle smoke test passed on a T4
-(10 steps in 12 s, 4.0 GB peak GPU memory; `results/verifier_smoke/README.md`). The verifier is not yet trained on real data and
-not yet part of the agent's pipeline.
+Status (Nov 12): real training data is built from the training-only assignments TR1 and
+TR2 (`verifier/train_data.py`, 594 examples, authority tone held out), with an evaluation
+on dev claims with the evidence the pipeline actually gathered (`verifier/eval_data.py`,
+`verifier/evaluate.py`); `notebooks/verifier_ft.ipynb` trains, evaluates against the
+untuned 3B and the prompted 7B, and runs the pipeline with the fine-tuned verifier. The
+choices that differ from the plan below are in `docs/DECISIONS.md` section 14. The smoke
+test passed on a T4 at the mid-submission (`results/verifier_smoke/README.md`).
 
 ## Role in the system (proposal section 7)
 

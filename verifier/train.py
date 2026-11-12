@@ -5,12 +5,15 @@ Usage (GPU, Kaggle T4): python -m verifier.train --config configs/verifier_smoke
 The model is loaded in 4-bit (NF4, float16 compute: the T4 has no bfloat16) and trained
 with LoRA adapters to produce the verifier's JSON answer (verifier/format.py); the loss
 covers only the answer tokens. Writes runs/<run id>/ with config.yaml, events.jsonl
-(one train_step event per step, check results), metrics.json and the LoRA adapter.
+(one train_step event per step, check results), metrics.json and the LoRA adapter. With
+`merge: true` the adapter is also merged into the float16 base model and saved as
+`merged/`, which vLLM serves as a plain model (no LoRA support needed on the T4).
 The GPU libraries (the optional "gpu" extra) are imported only inside `train`, so the
 helpers here are testable on CPU.
 """
 
 import argparse
+import gc
 import json
 import random
 import sys
@@ -49,6 +52,7 @@ class TrainConfig:
     learning_rate: float = 2e-4
     max_length: int = 1024
     check_examples: int = 6  # examples generated after training as a sanity check
+    merge: bool = False  # also save the adapter merged into the base model (for vLLM)
     lora: LoraSettings = field(default_factory=LoraSettings)
 
     @classmethod
@@ -200,7 +204,33 @@ def train(config: TrainConfig) -> Path:  # pragma: no cover - needs a GPU
         "check_total": checks["total"],
     }
     (run_dir / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
+    if config.merge:
+        del model, optimizer, tensors
+        gc.collect()
+        torch.cuda.empty_cache()
+        try:  # the adapter is already saved: a failed merge must not lose the run
+            merge_adapter(config.model, run_dir)
+            logger.log("merged", path=str(run_dir / "merged"))
+        except Exception as exc:
+            logger.log("merge_failed", error=repr(exc))
+            print(f"merge failed: {exc!r}", file=sys.stderr)
     return run_dir
+
+
+def merge_adapter(base_model: str, run_dir: Path) -> None:  # pragma: no cover - needs GPU libs
+    """Merge run_dir/adapter into the float16 base model and save it with the tokenizer as
+    run_dir/merged. On the GPU: float16 matrix products are not supported on the CPU in
+    every PyTorch version."""
+    import torch
+    from peft import PeftModel
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    base = AutoModelForCausalLM.from_pretrained(
+        base_model, torch_dtype=torch.float16, device_map={"": 0}
+    )
+    merged = PeftModel.from_pretrained(base, run_dir / "adapter").merge_and_unload()
+    merged.save_pretrained(run_dir / "merged", safe_serialization=True)
+    AutoTokenizer.from_pretrained(base_model).save_pretrained(run_dir / "merged")
 
 
 def check_generation(  # pragma: no cover - needs a GPU

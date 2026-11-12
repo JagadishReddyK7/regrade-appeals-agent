@@ -1,0 +1,25 @@
+{
+  "assignment": "TR1",
+  "submission": "TR1-S02",
+  "autograder": "standard",
+  "tests": {
+    "test_mean_basic": true,
+    "test_mean_empty": true,
+    "test_median_odd": true,
+    "test_median_even": false,
+    "test_count_above_basic": true,
+    "test_count_above_strict": true
+  },
+  "manual": {
+    "rubric:style": {
+      "awarded": 0,
+      "comment": "No docstrings."
+    },
+    "rubric:approach": {
+      "awarded": 3,
+      "comment": ""
+    }
+  },
+  "penalties": {},
+  "total": 23
+}

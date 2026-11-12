@@ -75,7 +75,7 @@ LLM judge, the test set and human labelling. The test-set scope is reduced in
 | Cost per appeal | `eval/cost.py` | wall time, LLM calls, latency, tokens, tool calls in `metrics.json` (`cost`) |
 | Course-doc search | `retrieval/course_docs.py` | BM25; announcements carry date and `superseded_by`; the announcement in force ranks first (R2) |
 | Precedent store | `retrieval/precedents.py` | JSONL store, BM25 search per assignment, wired to `search_precedents` via config; empty in all runs so far (R2) |
-| Verifier format and training | `agent/schemas.py`, `verifier/` | evidence bundle (R1), prompt, dummy data, QLoRA training script, Kaggle smoke notebook (R3); smoke test passed on a T4 (`results/verifier_smoke/`); not trained on real data; see `docs/VERIFIER_PLAN.md` |
+| Verifier format and training | `agent/schemas.py`, `verifier/`, `data/verifier_train/` | evidence bundle (R1), prompt, QLoRA training (R3); training data from the training-only assignments TR1/TR2 (594 examples, authority tone held out); evaluation on dev claims with real evidence; `notebooks/verifier_ft.ipynb` trains, evaluates and runs the pipeline with it; **first real training run pending**; see `docs/VERIFIER_PLAN.md`, `docs/DECISIONS.md` section 14 |
 | Full system (claim pipeline) | `agent/pipeline.py`, `agent/extractor.py`, `agent/aggregator.py`, `verifier/infer.py` | `system: pipeline`; prompted verifier (A4b) by default, `verifier.llm` for a 3B server; A0 via `no_claim_splitting` |
 | Baseline B1 | `baselines/b1_direct.py` | one prompt, JSON decision, follow-up turn |
 | Metrics and runner | `eval/metrics.py`, `eval/run.py` | section 11 task and robustness metrics; `python -m eval.run --config ...` |

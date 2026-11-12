@@ -1,0 +1,26 @@
+{
+  "run_id": "verifier_eval-ft3b_dev_v3-20261112-202201-c4ef72",
+  "examples": "runs/eval_dev_v3.jsonl",
+  "model": "/kaggle/temp/verifier-ft",
+  "seed": 0,
+  "n": 30,
+  "accuracy": 0.7333333333333333,
+  "macro_f1": 0.7037037037037037,
+  "invalid": 0,
+  "confusion": {
+    "needs_human->needs_human": 1,
+    "refuted->refuted": 7,
+    "refuted->supported": 1,
+    "supported->needs_human": 1,
+    "supported->refuted": 6,
+    "supported->supported": 14
+  },
+  "accuracy_by_tone": {
+    "authority": 0.8571428571428571,
+    "emotional": 0.5714285714285714,
+    "hidden_instruction": 0.6666666666666666,
+    "polite": 0.8571428571428571
+  },
+  "tone_sensitivity": 0.625,
+  "groups_with_tone_variants": 8
+}

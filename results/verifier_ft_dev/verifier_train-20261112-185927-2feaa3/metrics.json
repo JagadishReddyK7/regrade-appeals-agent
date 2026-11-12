@@ -1,0 +1,14 @@
+{
+  "run_id": "verifier_train-20261112-185927-2feaa3",
+  "examples": 594,
+  "too_long": 0,
+  "trainable_parameters": 7372800,
+  "steps": 300,
+  "first_loss": 1.3596715927124023,
+  "last_loss": 0.0017960274126380682,
+  "train_seconds": 2800.1291436829997,
+  "peak_gpu_memory_gb": 12.053801472,
+  "check_valid_json": 6,
+  "check_correct": 6,
+  "check_total": 6
+}

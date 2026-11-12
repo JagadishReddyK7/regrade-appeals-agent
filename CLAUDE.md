@@ -49,8 +49,8 @@ search_precedents, propose_grade_change, escalate_to_ta, submit_decision.
 - `agent/` schemas, tools, agent v0 loop (`loop.py`, the whole-appeal agent), and the full
   system: `pipeline.py` with `extractor.py` and `aggregator.py`
 - `retrieval/` course-doc index, precedent store
-- `verifier/` prompt format, inference (`infer.py`), dummy data, QLoRA training (real
-  training data to come);
+- `verifier/` prompt format, inference (`infer.py`), QLoRA training (`train.py`), training
+  data from TR1/TR2 (`train_data.py`, `data/verifier_train/`), evaluation (`evaluate.py`);
   plan in `docs/VERIFIER_PLAN.md`
 - `baselines/` B0-B4 (B1 done)
 - `eval/` metrics, run log, evaluation runner (statistics and LLM judge to come)

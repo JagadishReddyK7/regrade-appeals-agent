@@ -1,0 +1,122 @@
+# Verifier training situations on the training-only assignment TR2 (format: TR1.yaml).
+assignment: TR2
+distractors:
+  - {tool: run_tests}
+  - {tool: search_course_docs, query: "late policy extensions"}
+  - {tool: search_course_docs, query: "marking scheme"}
+  - {tool: search_course_docs, query: "add_item quantity"}
+  - {tool: search_precedents, query: "regrade appeal marks restored"}
+  - {tool: run_code, code: "from inventory import total_items\nprint(total_items({'apple': 2, 'pear': 3}))"}
+situations:
+  - id: TR2-01
+    submission: TR2-S01
+    target: test_remove_missing
+    verdict: supported
+    decisive: [{tool: search_course_docs, query: "remove_item missing item announcement"}]
+    support: [{tool: run_tests, test_ids: [test_remove_missing]}]
+    claims:
+      - "test_remove_missing expects a KeyError, but the later announcement says remove_item returns the inventory unchanged for a missing name, which is what my code does."
+      - "I lost 4 marks on test_remove_missing because my remove_item does not raise KeyError, yet the rule was changed on 10 October to return an unchanged copy."
+      - "The test for removing a missing item still follows the old rule that was replaced, so my correct remove_item fails it."
+  - id: TR2-02
+    submission: TR2-S02
+    target: test_remove_all
+    verdict: refuted
+    decisive: [{tool: run_tests, test_ids: [test_remove_all]}]
+    support:
+      - {tool: run_code, code: "from inventory import remove_item\nprint(remove_item({'apple': 2}, 'apple', 5))"}
+      - {tool: search_course_docs, query: "remove_item quantity reaches 0"}
+    claims:
+      - "My remove_item works correctly, so test_remove_all must be wrong."
+      - "I lost 4 marks on test_remove_all, but my function never lets a quantity go below zero, which is what the spec wants."
+      - "test_remove_all failed even though removing more than the stock correctly leaves the quantity at 0 in my code."
+  - id: TR2-03
+    submission: TR2-S02
+    target: "rubric:hints"
+    verdict: refuted
+    decisive: [{tool: submission}]
+    support: [{tool: search_course_docs, query: "type hints marks"}]
+    claims:
+      - "Python does not require type hints, so I should not lose 2 marks for leaving them out."
+      - "My code runs perfectly without type hints, so the hint marks should be restored."
+      - "Type hints are optional in Python; deducting marks for them is unfair."
+  - id: TR2-04
+    submission: TR2-S03
+    target: "rubric:approach"
+    verdict: refuted
+    decisive: [{tool: submission}]
+    support: [{tool: run_code, code: "from inventory import add_item\nstock = {'apple': 2}\nadd_item(stock, 'pear', 1)\nprint(stock)"}]
+    claims:
+      - "All my tests pass, so I should not lose the 4 approach marks."
+      - "My functions return the right inventories, so the approach deduction is wrong."
+      - "The approach marks were taken away even though every function gives the correct result."
+  - id: TR2-05
+    submission: TR2-S03
+    target: "rubric:hints"
+    verdict: supported
+    decisive: [{tool: search_course_docs, query: "partial credit type hints"}]
+    support: []
+    claims:
+      - "Every parameter in my code has a type hint, only the return types are missing, so I should get some of the hint marks instead of 0."
+      - "I got 0 out of 2 for type hints although all my parameters are hinted; partial credit applies here."
+      - "At least one hint mark is missing: my parameters all have type hints."
+  - id: TR2-06
+    submission: TR2-S04
+    target: "rubric:approach"
+    verdict: supported
+    decisive: [{tool: submission}]
+    support: [{tool: run_code, code: "from inventory import add_item, remove_item\nstock = {'apple': 2}\nadd_item(stock, 'pear', 1)\nremove_item(stock, 'apple', 1)\nprint(stock)"}]
+    claims:
+      - "The comment says I modify the inventory, but every function in my code works on a copy and never changes the dictionary it is given."
+      - "I lost 4 approach marks for modifying the input, yet add_item and remove_item both copy the inventory first."
+      - "My functions build a new dictionary with {**inventory}, so the approach deduction is a mistake."
+  - id: TR2-07
+    submission: TR2-S04
+    target: total
+    verdict: supported
+    decisive: [{tool: grade_report}]
+    support: []
+    claims:
+      - "My items add up to 26, but the total on the report is 23."
+      - "The total was added up wrongly: 24 test marks plus 2 hint marks is 26, not 23."
+      - "There is an addition mistake in my grade report total."
+  - id: TR2-08
+    submission: TR2-S05
+    target: "policy:late_penalty"
+    verdict: needs_human
+    decisive: []
+    support: [{tool: search_course_docs, query: "late policy extensions"}]
+    claims:
+      - "My TA promised me a two-day extension by email, so the late penalty should not apply."
+      - "I had an approved extension because of a medical appointment, so please remove the late penalty."
+      - "The late penalty should be waived: I was looking after a sick parent that week."
+  - id: TR2-09
+    submission: TR2-S05
+    target: null  # no marks deducted on the total, so the extractor gives no target
+    verdict: refuted
+    decisive: [{tool: grade_report}]
+    support: []
+    claims:
+      - "I think my total of 20 was added up wrongly."
+      - "Please check the addition of my grade, the total looks wrong."
+      - "The marks on my report do not seem to add up to the total."
+  - id: TR2-10
+    submission: TR2-S06
+    target: test_add_existing
+    verdict: refuted
+    decisive: [{tool: search_course_docs, query: "add_item existing name quantity"}]
+    support: [{tool: run_tests, test_ids: [test_add_existing]}]
+    claims:
+      - "The specification says add_item sets the quantity of an item, so test_add_existing is wrong to expect the quantities to be added."
+      - "test_add_existing expects 5, but add_item is supposed to replace the old quantity with the new one."
+      - "I lost 4 marks on test_add_existing although my add_item follows the spec by setting the given quantity."
+  - id: TR2-11
+    submission: TR2-S06
+    target: test_add_existing
+    verdict: refuted
+    decisive: [{tool: run_code, code: "from inventory import add_item\nprint(add_item({'apple': 2}, 'apple', 3))"}]
+    support: [{tool: run_tests, test_ids: [test_add_existing]}]
+    claims:
+      - "My add_item returns {'apple': 5} when 3 apples are added to 2, so test_add_existing should pass."
+      - "add_item already adds the quantities together in my code, so the failed test_add_existing is a grading error."
+      - "I checked my add_item by hand and it adds to an existing quantity; test_add_existing must be broken."

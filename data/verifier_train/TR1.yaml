@@ -1,0 +1,140 @@
+# Verifier training situations on the training-only assignment TR1 (verifier/train_data.py).
+# Each situation is one claim about one graded item with a verdict known by construction
+# (data/submissions/TR1-S0*/reference_grade.json). `decisive` lists the evidence the
+# verdict rests on (the first one is cited; grade_report = E1, submission = E2); `support`
+# items are added half of the time; distractors are drawn from `distractors`.
+assignment: TR1
+distractors:
+  - {tool: run_tests}
+  - {tool: search_course_docs, query: "late policy extensions"}
+  - {tool: search_course_docs, query: "marking scheme"}
+  - {tool: search_course_docs, query: "approach rules imports"}
+  - {tool: search_precedents, query: "regrade appeal marks restored"}
+  - {tool: run_code, code: "from list_stats import mean, median\nprint(mean([1, 2, 3]), median([7, 1, 4]))"}
+situations:
+  - id: TR1-01
+    submission: TR1-S01
+    target: test_count_above_strict
+    verdict: supported
+    decisive: [{tool: run_tests, test_ids: [test_count_above_strict]}]
+    support:
+      - {tool: search_course_docs, query: "count_above strictly greater than threshold"}
+      - {tool: run_code, code: "from list_stats import count_above\nprint(count_above([3, 3, 4], 3))"}
+    claims:
+      - "test_count_above_strict expects 3 for count_above([3, 3, 4], 3), but the specification says values equal to the threshold are not counted, so my answer of 1 is correct."
+      - "I lost 4 marks on test_count_above_strict even though my count_above counts only values strictly greater than the threshold, exactly as the specification asks."
+      - "The test for count_above seems to be wrong: it counts values equal to the threshold, which the spec explicitly excludes."
+  - id: TR1-02
+    submission: TR1-S02
+    target: test_median_even
+    verdict: refuted
+    decisive: [{tool: run_tests, test_ids: [test_median_even]}]
+    support:
+      - {tool: run_code, code: "from list_stats import median\nprint(median([4, 1, 3, 2]))"}
+      - {tool: search_course_docs, query: "median even number of values"}
+    claims:
+      - "My median function is correct, so test_median_even must be wrong."
+      - "I lost 4 marks on test_median_even, but my median returns the middle value of the sorted list as required."
+      - "test_median_even failed my code, yet I am sure median works for lists of any length."
+  - id: TR1-03
+    submission: TR1-S02
+    target: "rubric:style"
+    verdict: refuted
+    decisive: [{tool: submission}]
+    support: [{tool: search_course_docs, query: "style docstring"}]
+    claims:
+      - "I got 0 out of 3 for style, but my code is clean and easy to read, so it does not need docstrings."
+      - "The style marks should be restored because my variable names are clear and the code explains itself."
+      - "Losing all 3 style marks is too harsh: my functions are short and readable."
+  - id: TR1-04
+    submission: TR1-S03
+    target: "rubric:approach"
+    verdict: supported
+    decisive: [{tool: search_course_docs, query: "statistics median allowed"}]
+    support: [{tool: search_course_docs, query: "no imports approach"}]
+    claims:
+      - "I lost the 3 approach marks for importing statistics, but I only use statistics.median inside median, which a later announcement allowed."
+      - "The approach deduction is wrong: the announcement of 8 October lets us use statistics.median in median, and that is the only place I use it."
+      - "My median uses statistics.median, which was permitted after the no-imports rule was relaxed, so the approach marks should come back."
+  - id: TR1-05
+    submission: TR1-S03
+    target: "rubric:style"
+    verdict: supported
+    decisive: [{tool: search_course_docs, query: "style marks per function docstring"}]
+    support: [{tool: run_code, code: "import list_stats\nprint([f.__name__ for f in (list_stats.mean, list_stats.median, list_stats.count_above) if f.__doc__])"}]
+    claims:
+      - "I got 0 out of 3 for style, but my mean function has a docstring, so I should get at least some of the style marks."
+      - "Style was marked 0, yet one of my three functions is documented; style marks are given per function."
+      - "At least one style mark is missing: mean has a docstring even though the other two functions do not."
+  - id: TR1-06
+    submission: TR1-S04
+    target: "rubric:approach"
+    verdict: refuted
+    decisive: [{tool: search_course_docs, query: "statistics module allowed announcement"}]
+    support: [{tool: search_course_docs, query: "no imports approach marks"}]
+    claims:
+      - "The course relaxed the no-imports rule for the statistics module, so using statistics.mean in mean should not cost me the approach marks."
+      - "I lost 3 approach marks for statistics.mean, but the announcement allowed the statistics module."
+      - "Using statistics.mean is allowed now that the statistics module is permitted, so please restore my approach marks."
+  - id: TR1-07
+    submission: TR1-S04
+    target: total
+    verdict: supported
+    decisive: [{tool: grade_report}]
+    support: []
+    claims:
+      - "My marks add up to 27, but the total on my grade report is 25."
+      - "The total seems to be added up wrongly: all tests passed and I got 3 for style, which makes 27, not 25."
+      - "There is a mistake in the addition of my grade: the items sum to more than the total I was given."
+  - id: TR1-08
+    submission: TR1-S05
+    target: test_count_above_strict
+    verdict: refuted
+    decisive: [{tool: run_tests, test_ids: [test_count_above_strict]}]
+    support:
+      - {tool: search_course_docs, query: "count_above threshold"}
+      - {tool: run_code, code: "from list_stats import count_above\nprint(count_above([3, 3, 4], 3))"}
+    claims:
+      - "test_count_above_strict is wrong: my count_above counts every value above the threshold correctly."
+      - "I lost 4 marks on test_count_above_strict, but my function returns the right count."
+      - "My count_above passes the basic test, so the strict test must have a bug."
+  - id: TR1-09
+    submission: TR1-S05
+    target: "policy:late_penalty"
+    verdict: needs_human
+    decisive: []
+    support: [{tool: search_course_docs, query: "late policy extensions medical"}]
+    claims:
+      - "I was ill with a fever on the day of the deadline, so the late penalty should be removed."
+      - "I submitted late because I was in hospital, and I ask for the 10-mark late penalty to be waived."
+      - "A family emergency kept me from submitting on time, so please remove the late penalty."
+  - id: TR1-10
+    submission: TR1-S05
+    target: null  # no marks deducted on the total, so the extractor gives no target
+    verdict: refuted
+    decisive: [{tool: grade_report}]
+    support: []
+    claims:
+      - "I think the total of my grade was added up wrongly."
+      - "The total of 16 cannot be right; please check the addition."
+      - "My total looks too low, the marks must have been summed incorrectly."
+  - id: TR1-11
+    submission: TR1-S06
+    target: test_mean_empty
+    verdict: refuted
+    decisive: [{tool: run_code, code: "from list_stats import mean\nprint(mean([]))"}]
+    support: [{tool: run_tests, test_ids: [test_mean_empty]}]
+    claims:
+      - "My mean handles an empty list correctly, so test_mean_empty should not have failed."
+      - "I lost 4 marks on test_mean_empty, but my mean returns 0.0 for an empty list as the spec says."
+      - "test_mean_empty is wrong: my mean works for every list, including an empty one."
+  - id: TR1-12
+    submission: TR1-S06
+    target: "rubric:style"
+    verdict: supported
+    decisive: [{tool: submission}]
+    support: [{tool: search_course_docs, query: "style docstring per function"}]
+    claims:
+      - "All three of my functions have docstrings, but I only got 1 out of 3 for style."
+      - "The style comment says docstrings are missing, yet mean, median and count_above each have one."
+      - "I was marked down for missing docstrings, but every function in my file is documented."

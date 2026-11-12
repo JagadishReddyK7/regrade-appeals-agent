@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: 2026-11-11. Update this file when a milestone-level item
+Last updated: 2026-11-13. Update this file when a milestone-level item
 finishes or the plan changes; tasks and owners are tracked in GitHub Issues.
 
 ## Where we are
@@ -54,6 +54,12 @@ LLM judge, the test set and human labelling. The test-set scope is reduced in
   Third run (`results/pipeline_dev_v3/`): pipeline 0.58, wrongful change 0.00, wrongful
   refusal 0.60, escalation precision and recall 1.00, pushback flips 0.00; A0 0.42.
   **Prompts frozen at `8f8115e`** (`docs/DECISIONS.md` section 13).
+- **Verifier fine-tuned (Nov 12, commit `620d60e`, `results/verifier_ft_dev/`):**
+  QLoRA on Qwen2.5-3B, 594 examples from TR1/TR2, 300 steps in 47 minutes. On the dev
+  claims macro-F1 0.70 against 0.41 for the prompted 7B and 0.26 for the untuned 3B;
+  pipeline with it 0.67 exact accuracy (run 3: 0.58), wrongful change 0.00, wrongful
+  refusal 0.43. **Go:** it is the main verifier of the test runs (`docs/DECISIONS.md`
+  section 14).
 - Fixes from `results/mid_dev_24/`: arithmetic check in `get_grade_report`, follow-up errors
   keep the first decision (agent v0), B1 may cite `followup`, rejected proposals list valid
   item ids.
@@ -75,7 +81,7 @@ LLM judge, the test set and human labelling. The test-set scope is reduced in
 | Cost per appeal | `eval/cost.py` | wall time, LLM calls, latency, tokens, tool calls in `metrics.json` (`cost`) |
 | Course-doc search | `retrieval/course_docs.py` | BM25; announcements carry date and `superseded_by`; the announcement in force ranks first (R2) |
 | Precedent store | `retrieval/precedents.py` | JSONL store, BM25 search per assignment, wired to `search_precedents` via config; empty in all runs so far (R2) |
-| Verifier format and training | `agent/schemas.py`, `verifier/` | evidence bundle (R1), prompt, dummy data, QLoRA training script, Kaggle smoke notebook (R3); smoke test passed on a T4 (`results/verifier_smoke/`); not trained on real data; see `docs/VERIFIER_PLAN.md` |
+| Verifier format and training | `agent/schemas.py`, `verifier/`, `data/verifier_train/` | evidence bundle (R1), prompt, QLoRA training (R3); training data from the training-only assignments TR1/TR2 (594 examples, authority tone held out); evaluation on dev claims with real evidence; `notebooks/verifier_ft.ipynb` trains, evaluates and runs the pipeline with it; trained and chosen as the main verifier (`results/verifier_ft_dev/`); see `docs/VERIFIER_PLAN.md`, `docs/DECISIONS.md` section 14 |
 | Full system (claim pipeline) | `agent/pipeline.py`, `agent/extractor.py`, `agent/aggregator.py`, `verifier/infer.py` | `system: pipeline`; prompted verifier (A4b) by default, `verifier.llm` for a 3B server; A0 via `no_claim_splitting` |
 | Baseline B1 | `baselines/b1_direct.py` | one prompt, JSON decision, follow-up turn |
 | Metrics and runner | `eval/metrics.py`, `eval/run.py` | section 11 task and robustness metrics; `python -m eval.run --config ...` |
@@ -115,8 +121,8 @@ In priority order; owners in GitHub Issues.
   the prompt); final numbers need repeated runs.
 - Dev has 6 situations on one assignment.
 - Cases run one at a time (A4).
-- Ablations A0, A3, A4, A5 and A7 are not built (they need claim splitting, filled precedents or the trained verifier).
-- The precedent store is empty in all runs; the verifier is not in the pipeline yet.
+- Ablations A3, A5 (verifier without tone pairing) and A7 (no first-turn memory) are not built. A4 (A4a untuned 3B, A4b prompted 7B) ran on dev claims only, not yet as full pipeline runs on test.
+- The precedent store is empty in all runs.
 - The full test suite takes about 30-60 s on Windows (many sandbox subprocesses).
 
 ## Later (weeks 2-8)

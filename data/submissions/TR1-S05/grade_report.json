@@ -1,0 +1,27 @@
+{
+  "assignment": "TR1",
+  "submission": "TR1-S05",
+  "autograder": "standard",
+  "tests": {
+    "test_mean_basic": true,
+    "test_mean_empty": true,
+    "test_median_odd": true,
+    "test_median_even": true,
+    "test_count_above_basic": true,
+    "test_count_above_strict": false
+  },
+  "manual": {
+    "rubric:style": {
+      "awarded": 3,
+      "comment": ""
+    },
+    "rubric:approach": {
+      "awarded": 3,
+      "comment": ""
+    }
+  },
+  "penalties": {
+    "policy:late_penalty": 10
+  },
+  "total": 16
+}

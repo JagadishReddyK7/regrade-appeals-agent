@@ -449,3 +449,17 @@ unchanged as the whole-appeal tool agent (B3).
   the outputs were invalid. The prompt now says so.
 - **A rejected proposal lists the items with deducted marks** (agent v0), so the model can
   correct a wrong item id.
+
+## 13. Prompts frozen after the third dev run (2026-11-12)
+
+- **All prompts and pipeline code are frozen at commit `8f8115e`** (extractor, evidence
+  agent, prompted verifier, aggregator, agent v0, B1). The test-set runs use exactly this
+  code; only bug fixes that do not touch prompts or decision rules are allowed, each
+  recorded here.
+- **Why stop tuning:** three dev runs on the same 24 cases (`results/pipeline_dev_v1/` to
+  `v3/`) moved the prompted verifier from too lenient (run 2: 4 wrong "supported") to too
+  strict (run 3: 11 wrong "refuted"), while in run 3 the evidence it needed was present
+  (the 12 September recursion announcement in dev-002, the 19 September partial-credit
+  announcement in dev-017). The remaining errors are the prompted 7B's judgement, not
+  missing evidence or a pipeline bug, so more prompt changes would fit noise on 24 cases.
+  Improving the verifier is the job of the fine-tuned 3B (H1c, go/no-go on Nov 13).

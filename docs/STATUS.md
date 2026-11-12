@@ -50,8 +50,10 @@ LLM judge, the test set and human labelling. The test-set scope is reduced in
   targets; fixed the same day (`docs/DECISIONS.md` section 12). Second run
   (`results/pipeline_dev_v2/`): pipeline 0.46, over-escalation 0.00, pushback flips 0.00;
   agent v0 0.67, A0 0.50. Remaining causes: targets on items with no deducted marks, the
-  submission not read, and a weak prompted verifier (13 of 23 claims right); fixed,
-  **third dev run pending**, then prompts freeze before the test runs.
+  submission not read, and a weak prompted verifier (13 of 23 claims right); fixed.
+  Third run (`results/pipeline_dev_v3/`): pipeline 0.58, wrongful change 0.00, wrongful
+  refusal 0.60, escalation precision and recall 1.00, pushback flips 0.00; A0 0.42.
+  **Prompts frozen at `8f8115e`** (`docs/DECISIONS.md` section 13).
 - Fixes from `results/mid_dev_24/`: arithmetic check in `get_grade_report`, follow-up errors
   keep the first decision (agent v0), B1 may cite `followup`, rejected proposals list valid
   item ids.

@@ -53,9 +53,9 @@ AgentLoop.run()
 ```
 ClaimPipeline.run()
   turn 1:
-    extract_claims(appeal)           agent/extractor.py   7B, JSON constrained to item ids
-                                     (A0: the whole appeal is one claim)
-    EvidenceAgent.first_turn()       grade report loaded as E1, then a tool loop with the
+    extract_claims(appeal)           agent/extractor.py   7B, JSON constrained to items with
+                                     deducted marks (A0: the whole appeal is one claim)
+    EvidenceAgent.first_turn()       grade report (E1) and submission (E2) loaded, then a tool loop with the
                                      read-only tools + finish_evidence (10 calls per turn)
     verify_claim(claim, all evidence) verifier/infer.py   T3 policy claims -> needs_human
     aggregate(verdicts)              agent/aggregator.py  rules in code, amounts from the 7B

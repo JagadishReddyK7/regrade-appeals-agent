@@ -127,10 +127,13 @@ def test_pipeline_restores_supported_claim_only(
     ]
     assert result.followup_run and result.followup_decision == result.decision
     assert result.followup_status == "no_new_claims"
-    # E1 is the grade report the pipeline loads; the agent sees claims, not the appeal.
+    # The pipeline loads the grade report (E1) and the submission (E2); the agent sees
+    # both and the claims, not the appeal.
     assert result.evidence["E1"]["tool"] == "get_grade_report"
+    assert result.evidence["E2"]["tool"] == "get_submission"
     agent_prompt = main.requests[1]["messages"][1]["content"]
     assert C1_SPAN in agent_prompt and "Hello" not in agent_prompt
+    assert "def count_vowels" in agent_prompt
     offered = {t["function"]["name"] for t in main.requests[1]["tools"]}
     assert offered == {
         "get_submission",
@@ -143,7 +146,7 @@ def test_pipeline_restores_supported_claim_only(
     }
     # The verifier sees the claim as written plus all evidence.
     assert C1_SPAN in check.requests[0]["messages"][1]["content"]
-    assert "[E2] from run_tests" in check.requests[0]["messages"][1]["content"]
+    assert "[E3] from run_tests" in check.requests[0]["messages"][1]["content"]
     proposals = read_events(tmp_path / "proposals.jsonl", "grade_change_proposal")
     assert [(p["item_id"], p["delta"]) for p in proposals] == [("test_empty_string", 5)]
     assert len(events(tmp_path, "verdict")) == 2
@@ -236,7 +239,7 @@ def test_followup_with_new_claim_decides_again(
     # The second evidence turn continues the first conversation.
     assert "New claims" in main.requests[4]["messages"][-1]["content"]
     assert len(read_events(tmp_path / "proposals.jsonl", "proposals_withdrawn")) == 1
-    assert result.tool_calls == 4  # E1, finish; search, finish
+    assert result.tool_calls == 5  # E1, E2, finish; search, finish
 
 
 def test_supported_new_claim_supersedes_earlier_verdict_on_same_item() -> None:
@@ -313,9 +316,9 @@ def test_budget_ends_evidence_turn(
 ) -> None:
     script = [EXTRACT_001, *[call("get_submission")] * 2, restore()]
     verifier = [verdict("refuted", "E1"), verdict("refuted", "E1")]
-    options = PipelineOptions(followup=False, max_calls=3)
+    options = PipelineOptions(followup=False, max_calls=4)
     result, main, _ = run("dev-001", script, runner, logs, verifier, options)
-    assert result.tool_calls == 3  # E1 + two submissions
+    assert result.tool_calls == 4  # E1, E2 + two submissions
     assert result.decision is not None and result.decision.outcome == "no_change"
     assert len(main.requests) == 3  # extractor + two agent calls; no aggregator call
 
@@ -333,6 +336,26 @@ def test_extractor_schema_restricts_targets() -> None:
     schema = output_schema(["test_a", "rubric:style"])
     target = schema["$defs"]["ExtractedClaim"]["properties"]["target"]
     assert target["anyOf"][0]["enum"] == ["test_a", "rubric:style"]
+    empty = output_schema([])["$defs"]["ExtractedClaim"]["properties"]["target"]
+    assert empty == {"anyOf": [{"type": "null"}]}
+
+
+def test_extractor_targets_only_items_with_deducted_marks(
+    runner: SandboxRunner, logs: tuple[RunLogger, RunLogger], tmp_path: Path
+) -> None:
+    # dev-002: only rubric:approach lost marks, so a recursion claim cannot be linked to
+    # a test with 0 marks deducted (the first dev run did that); a wrong target is retried.
+    case = load_case("dev-002")
+    span = next(s for s in case.appeal_text.split(". ") if "recursion" in s)
+    wrong = claims(("C1", span, "test_reverse_words_basic", "T2"))
+    script = [wrong, claims(("C1", span, "rubric:approach", "T2")), FINISH]
+    options = PipelineOptions(followup=False)
+    result, main, _ = run("dev-002", script, runner, logs, [verdict("refuted", "E1")], options)
+    schema = main.requests[0]["response_format"]["json_schema"]["schema"]
+    enum = schema["$defs"]["ExtractedClaim"]["properties"]["target"]["anyOf"][0]["enum"]
+    assert enum == ["rubric:approach"]
+    assert [e["kind"] for e in events(tmp_path, "invalid_output")] == ["extractor"]
+    assert result.decision is not None and result.decision.outcome == "no_change"
 
 
 def test_check_claims_accepts_whitespace_differences() -> None:

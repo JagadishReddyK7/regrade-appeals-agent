@@ -359,14 +359,32 @@ unchanged as the whole-appeal tool agent (B3).
 
 - **Extractor** (7B, constrained JSON): sees the appeal (or follow-up) and the graded items
   with the marks the grade report deducted, as a TA would; `target` is restricted by the
-  JSON schema to the item ids or null, so wrong ids such as `style` cannot occur. A span
+  JSON schema to the items **with deducted marks** or null, so wrong ids such as `style`
+  cannot occur. Restricting to deducted items came after the second run
+  (`results/pipeline_dev_v2/`): the extractor linked all four "recursion was allowed"
+  claims to a test with 0 marks deducted, so the aggregator's correct restoration on
+  `rubric:approach` broke the target rule and no marks came back. Marks can only be
+  restored where they were deducted, so nothing valid is lost. The prompt also says that a
+  request to waive a penalty is a claim (the emotional late-penalty appeal gave no claims
+  at all). A span
   must occur in the text, compared with whitespace collapsed (line breaks are not
   rewording). An invalid answer is logged as `invalid_output` and retried once with the
   error message; a second failure leaves the turn without a decision. The retry is
   logged and counted, so this is not silent repair.
-- **The pipeline loads the grade report as evidence E1** before the evidence agent starts
-  (it counts against the 10-call budget). Every claim disputes a mark in it, and in the
-  mid runs the agent sometimes never read it.
+- **The pipeline loads the grade report as evidence E1 and the submission as E2** before
+  the evidence agent starts (both count against the 10-call budget). Every claim disputes
+  a mark in the report, and in the mid runs the agent sometimes never read it. The
+  submission was added after the second run: for "my count_vowels has a docstring" the
+  agent searched the docs but never opened the code, so nothing showed the docstring
+  exists. The evidence prompt now also says to test the student's functions through
+  `run_code` by importing their module: in dev-015 the agent wrote its own `count_vowels`,
+  it passed, and the verifier took that as support.
+- **The verifier prompt has judging rules per kind of claim** (test vs specification,
+  rubric criterion with the latest announcement in force, arithmetic check; opinions do
+  not change a criterion). Added after the second run, where the prompted 7B was right on
+  only 13 of 23 claims with a gold verdict, wrong in both directions. The prompt is shared
+  with training (`verifier/format.py`), so the fine-tuned 3B must be trained with this
+  version.
 - **`get_grade_report` returns an arithmetic check** (`items_add_up_to`,
   `reported_total`, `total_matches_items`), placed first so shortening cannot cut it.
   This is the mitigation for the missed arithmetic errors in `results/mid_dev_24/`; it is

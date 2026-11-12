@@ -3,10 +3,10 @@
 
 1. The extractor (7B) splits the appeal into claims (span, target, tier). With ablation A0
    (`no_claim_splitting`) the whole appeal is one claim with no target.
-2. The pipeline loads the grade report as evidence E1, then the evidence agent (7B, tool
-   loop) gathers evidence for the claims with the read-only tools and ends with
-   `finish_evidence`. It sees the claims, not the appeal. Every call counts against the
-   turn's budget (E1 included), so the loop always ends.
+2. The pipeline loads the grade report (E1) and the submission (E2) as evidence, then the
+   evidence agent (7B, tool loop) gathers evidence for the claims with the read-only tools
+   and ends with `finish_evidence`. It sees the claims, not the appeal. Every call counts
+   against the turn's budget (E1 and E2 included), so the loop always ends.
 3. The verifier judges each claim, as the student wrote it, against all the evidence. T3
    claims go to a human without a verifier call (when escalation is available).
 4. The aggregator turns the verdicts into restorations or an escalation
@@ -15,8 +15,9 @@
    the cap is enforced twice.
 5. Follow-up: the extractor reads the follow-up for new claims. None (pressure only): the
    first decision stands. Otherwise the agent gathers more evidence in the same
-   conversation (fresh budget), every claim is verified again with all evidence, the turn-1
-   proposals are withdrawn and the aggregator decides again.
+   conversation (fresh budget), only the new claims are verified, a supported new claim
+   replaces the earlier verdicts on its item, the turn-1 proposals are withdrawn and the
+   aggregator decides again.
 """
 
 from dataclasses import dataclass, field
@@ -122,7 +123,12 @@ class PipelineResult:
 def evidence_prompt(options: PipelineOptions) -> str:
     how = []
     if options.code_execution:
-        how.append("for a claim about a test or what the code does, run the tests or your own code")
+        how.append(
+            "for a claim about a test or what the code does, run that test, or use run_code "
+            "with a short script that imports the student's module and prints what their "
+            "function returns for a specific input (never write your own version of the "
+            "function: only the student's code is evidence)"
+        )
     if options.retrieval:
         how.append(
             "for a claim about the rubric, a policy or an announcement, search the course "
@@ -168,10 +174,11 @@ class EvidenceAgent:
     def first_turn(self, case: Case, claims: list[ExtractedClaim]) -> None:
         start = self.result.tool_calls
         report = self._run_tool("get_grade_report", NoArgs(), actor="pipeline")
+        submission = self._run_tool("get_submission", NoArgs(), actor="pipeline")
         user = f"Assignment: {case.assignment}\nSubmission: {case.submission}\n\n"
         if not self.options.retrieval:
             user += f"Rubric:\n{rubric_text(self.tools.assignment)}\n\n"
-        user += f"Claims:\n{claims_text(claims)}\n\nAlready loaded:\n{report}"
+        user += f"Claims:\n{claims_text(claims)}\n\nAlready loaded:\n{report}\n\n{submission}"
         self.messages = [
             {"role": "system", "content": evidence_prompt(self.options)},
             {"role": "user", "content": user},

@@ -221,3 +221,11 @@ def test_server_section_and_base_model() -> None:
     llm = {"model": "name", "serve": {"base_model": "Qwen/Qwen2.5-3B-Instruct"}}
     assert build_command(llm)[2] == "Qwen/Qwen2.5-3B-Instruct"
     assert build_command({"model": "Qwen/x"})[2] == "Qwen/x"
+
+
+def test_train_cli_can_merge_an_earlier_adapter() -> None:
+    from verifier.train import build_parser
+
+    args = build_parser().parse_args(["--config", "c.yaml", "--merge-only", "runs/r1"])
+    assert args.merge_only == Path("runs/r1")
+    assert build_parser().parse_args(["--config", "c.yaml"]).merge_only is None

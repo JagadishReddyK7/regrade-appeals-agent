@@ -259,11 +259,28 @@ def check_generation(  # pragma: no cover - needs a GPU
     return {"valid": valid, "correct": correct, "total": len(examples)}
 
 
-def main(argv: list[str]) -> int:  # pragma: no cover - needs a GPU
+def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="python -m verifier.train")
     parser.add_argument("--config", type=Path, required=True)
-    args = parser.parse_args(argv)
-    run_dir = train(load_train_config(args.config))
+    parser.add_argument(
+        "--merge-only",
+        type=Path,
+        metavar="RUN_DIR",
+        help="do not train: merge RUN_DIR/adapter (an earlier run) into RUN_DIR/merged",
+    )
+    return parser
+
+
+def main(argv: list[str]) -> int:  # pragma: no cover - needs a GPU
+    args = build_parser().parse_args(argv)
+    config = load_train_config(args.config)
+    if args.merge_only is not None:
+        if not (args.merge_only / "adapter").is_dir():
+            raise SystemExit(f"no adapter in {args.merge_only}")
+        merge_adapter(config.model, args.merge_only)
+        print(f"merged model written to {args.merge_only / 'merged'}")
+        return 0
+    run_dir = train(config)
     print(f"run written to {run_dir}")
     print((run_dir / "metrics.json").read_text(encoding="utf-8"))
     return 0

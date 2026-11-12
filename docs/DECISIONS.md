@@ -499,7 +499,11 @@ unchanged as the whole-appeal tool agent (B3).
   fine-tuned 3B and the prompted 7B (A4b) are compared on the same claims
   (`verifier/evaluate.py`: accuracy, macro-F1, tone sensitivity).
 - **The adapter is merged into the float16 base for serving** (`merge: true`), so vLLM
-  serves a plain model on the second T4; vLLM's LoRA support on the T4 is not needed.
+  serves a plain model on the second T4; vLLM's LoRA support on the T4 is not needed. The
+  merge runs on the GPU; Kaggle's preinstalled torchao 0.10 must be uninstalled first (peft
+  refuses to merge into a float16 model next to a torchao older than 0.16; the first
+  training run on Kaggle trained fine and failed only there). `verifier.train --merge-only`
+  merges a saved adapter without training again.
 - **Go/no-go rule (Nov 13):** the fine-tuned 3B becomes the main verifier for the test
   runs if its macro-F1 on the dev claims is at least the prompted 7B's and the pipeline
   with it does not lose exact-decision accuracy on dev; otherwise the prompted 7B stays

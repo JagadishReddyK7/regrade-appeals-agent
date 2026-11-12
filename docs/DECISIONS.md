@@ -350,3 +350,116 @@ Runner behaviour:
 - **The verifier is trained on the answer tokens only**; examples longer than
   `max_length` are skipped and counted, never truncated (cutting the prompt would drop
   the claim or evidence).
+
+## 12. Claim pipeline: the full system (final submission)
+
+`agent/pipeline.py`, `agent/extractor.py`, `agent/aggregator.py`, `verifier/infer.py`;
+config `system: pipeline` (`configs/pipeline_dev.yaml`). Agent v0 (`system: agent`) stays
+unchanged as the whole-appeal tool agent (B3).
+
+- **Extractor** (7B, constrained JSON): sees the appeal (or follow-up) and the graded items
+  with the marks the grade report deducted, as a TA would; `target` is restricted by the
+  JSON schema to the items **with deducted marks** or null, so wrong ids such as `style`
+  cannot occur. Restricting to deducted items came after the second run
+  (`results/pipeline_dev_v2/`): the extractor linked all four "recursion was allowed"
+  claims to a test with 0 marks deducted, so the aggregator's correct restoration on
+  `rubric:approach` broke the target rule and no marks came back. Marks can only be
+  restored where they were deducted, so nothing valid is lost. The prompt also says that a
+  request to waive a penalty is a claim (the emotional late-penalty appeal gave no claims
+  at all). A span
+  must occur in the text, compared with whitespace collapsed (line breaks are not
+  rewording). An invalid answer is logged as `invalid_output` and retried once with the
+  error message; a second failure leaves the turn without a decision. The retry is
+  logged and counted, so this is not silent repair.
+- **The pipeline loads the grade report as evidence E1 and the submission as E2** before
+  the evidence agent starts (both count against the 10-call budget). Every claim disputes
+  a mark in the report, and in the mid runs the agent sometimes never read it. The
+  submission was added after the second run: for "my count_vowels has a docstring" the
+  agent searched the docs but never opened the code, so nothing showed the docstring
+  exists. The evidence prompt now also says to test the student's functions through
+  `run_code` by importing their module: in dev-015 the agent wrote its own `count_vowels`,
+  it passed, and the verifier took that as support.
+- **The verifier prompt has judging rules per kind of claim** (test vs specification,
+  rubric criterion with the latest announcement in force, arithmetic check; opinions do
+  not change a criterion). Added after the second run, where the prompted 7B was right on
+  only 13 of 23 claims with a gold verdict, wrong in both directions. The prompt is shared
+  with training (`verifier/format.py`), so the fine-tuned 3B must be trained with this
+  version.
+- **`get_grade_report` returns an arithmetic check** (`items_add_up_to`,
+  `reported_total`, `total_matches_items`), placed first so shortening cannot cut it.
+  This is the mitigation for the missed arithmetic errors in `results/mid_dev_24/`; it is
+  computed from the report itself, not the answer key. Agent v0 sees it too, which keeps
+  the comparison with B3 fair.
+- **The evidence agent sees the claims, not the appeal**, and only the read-only tools
+  plus `finish_evidence`. It does not decide. If the budget runs out before
+  `finish_evidence`, the verifier still gets the evidence gathered so far.
+- **The verifier sees each claim with all evidence of the appeal**, not a per-claim
+  subset: asking the agent to map evidence to claims added a failure mode for little gain
+  with at most 10 items. `MAX_EVIDENCE_CHARS` is now 2,500 per item so that a whole grade
+  report fits. **The verifier is prompted** for now (the 7B on the main server, ablation
+  A4b); `verifier.llm` in the config points it at another server (untuned 3B, A4a, or the
+  fine-tuned 3B). Fine-tuning is the main verifier in the proposal; whether it makes the
+  final runs is decided on Nov 13.
+- **T3 claims go to a human without a verifier call only if they dispute a policy or no
+  item** (and escalation is available). A claim on a test, rubric item or the total can
+  always be checked, so the verifier sees it even when the extractor called it T3: in the
+  first run (`results/pipeline_dev_v1/`) the extractor tagged "please check the addition"
+  and claims citing a senior as T3, and the pipeline over-escalated (0.35). The extractor
+  prompt now also says that what another person says does not make a claim T3.
+- **An invalid verifier answer counts as `needs_human`** (escalate: "unclear cases go to a
+  TA"), logged as `invalid_output` and as a `verdict` event with `valid: false`.
+- **The aggregator sees all evidence of the appeal** (not only the items the verifier
+  cited), so it can apply a partial-credit rule found by search; its `item_id` is
+  restricted by the JSON schema to the items with deducted marks (in A0 it invented
+  `approach` and `style`). The verifier's `evidence_id` is likewise restricted to the
+  bundle's ids at inference (training keeps the plain format).
+- **The aggregator's rules are code; only the amount is the model's.** Escalate if any
+  claim needs a human; no change, without a model call, if no claim is supported;
+  otherwise the 7B proposes restorations, checked in code (supported claims only, on the
+  claim's target only, never above the deducted marks). One retry after invalid output.
+  `full_change` means every disputed item is restored in full. Low-confidence escalation
+  is a config option (`pipeline.escalate_below_confidence`), off by default (0.0) until
+  the dev runs show where to set it.
+- **The pipeline, not the model, calls `propose_grade_change` and `escalate_to_ta`**
+  (logged as `tool_call` with `actor: pipeline`). Proposals therefore always use valid
+  ids, the cap is checked twice, and escalations always reach the TA log (closes open
+  question 6 for the pipeline).
+- **Follow-up**: the extractor reads the follow-up with the earlier claims and is asked
+  only for claims that bring new evidence (a document, announcement, test, input or
+  fact); repetition, insistence and opinions give an empty list, and then the first
+  decision stands without further calls. Otherwise the agent gathers more evidence in the
+  same conversation with a fresh budget, **only the new claims are verified**, a new
+  claim supported on an item replaces the earlier verdicts on that item, the turn-1
+  proposals are withdrawn (`proposals_withdrawn` in the proposals log) and the aggregator
+  decides again. Re-verifying every claim (the first version) let unrelated new evidence
+  flip an earlier verdict (dev-006).
+- **Announcement dates are searchable**: BM25 indexes the date as `2026-09-19 19
+  September 2026` (fixed English month names, not the locale), so "the 19 September
+  announcement" finds it. This also changes agent v0's search results.
+- **`llm.max_tokens`** (optional, `OpenAIBackend`) caps each reply; the pipeline configs
+  use 1024 after a runaway reply timed out a case.
+- **Ablations**: `no_claim_splitting` (A0: the whole appeal is one claim, id `appeal`, no
+  target; the follow-up is one claim, id `followup`), `no_code_execution` (A1),
+  `no_retrieval` (A2), `no_escalation` (A6: `needs_human` claims become eligible for the
+  aggregator, which must decide). A3, A5 and A7 are not built.
+- **Follow-up errors keep the first decision** in the pipeline and now also in agent v0
+  (`followup_error` event, `followup_run` false), as B1 already did. Before, a timeout in
+  the follow-up discarded a valid first decision (A6 in `results/mid_dev_24/`).
+- **B1 may cite its follow-up as `followup`**: in the mid runs B1 did this three times and
+  the outputs were invalid. The prompt now says so.
+- **A rejected proposal lists the items with deducted marks** (agent v0), so the model can
+  correct a wrong item id.
+
+## 13. Prompts frozen after the third dev run (2026-11-12)
+
+- **All prompts and pipeline code are frozen at commit `8f8115e`** (extractor, evidence
+  agent, prompted verifier, aggregator, agent v0, B1). The test-set runs use exactly this
+  code; only bug fixes that do not touch prompts or decision rules are allowed, each
+  recorded here.
+- **Why stop tuning:** three dev runs on the same 24 cases (`results/pipeline_dev_v1/` to
+  `v3/`) moved the prompted verifier from too lenient (run 2: 4 wrong "supported") to too
+  strict (run 3: 11 wrong "refuted"), while in run 3 the evidence it needed was present
+  (the 12 September recursion announcement in dev-002, the 19 September partial-credit
+  announcement in dev-017). The remaining errors are the prompted 7B's judgement, not
+  missing evidence or a pipeline bug, so more prompt changes would fit noise on 24 cases.
+  Improving the verifier is the job of the fine-tuned 3B (H1c, go/no-go on Nov 13).

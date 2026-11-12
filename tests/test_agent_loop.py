@@ -465,3 +465,13 @@ def test_large_tool_output_truncated_for_model_only(
         e for e in read_events(tmp_path / "run.jsonl", "tool_call") if e["tool"] == "run_code"
     ]
     assert event["truncated_for_model"] is True
+
+
+def test_rejected_proposal_lists_items_with_deducted_marks(
+    runner: SandboxRunner, logs: tuple[RunLogger, RunLogger]
+) -> None:
+    tools = make_toolbox(runner, logs, load_case("dev-001"))
+    with pytest.raises(RejectedAction, match="items with deducted marks: .*rubric:style"):
+        tools.call(
+            "propose_grade_change", ProposeGradeChangeArgs(item_id="style", delta=2, reason="r")
+        )

@@ -20,7 +20,9 @@ tone-paired data), so the tone must reach the verifier for training to matter.
 
 - **Input, `EvidenceBundle`:** `claim` (verbatim span), `target` (test id, `rubric:...`,
   `policy:...` or `total`), `evidence`: items with the agent's evidence id (`E3`), the
-  source tool and the tool output (shortened to 1,500 characters).
+  source tool and the tool output (shortened to 2,500 characters, so a whole grade report
+  fits; in the pipeline the bundle holds all evidence of the appeal, so real training needs
+  `max_length` of about 4096 tokens, not the smoke test's 1024).
 - **Output, `VerifierOutput`:** `{"verdict": ..., "evidence_id": ...}`; a decided verdict
   must cite an evidence id that is in the bundle. Parsing is strict (no repair).
 - **Training example, `VerifierExample`:** bundle + label + tone + assignment + `pair_id`

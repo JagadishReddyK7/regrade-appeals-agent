@@ -14,7 +14,7 @@ from agent.schemas import EvidenceBundle, EvidenceItem, VerifierExample, Verifie
 from llm.client import Message
 from llm.parsing import ParseResult, parse_json_output
 
-MAX_EVIDENCE_CHARS = 1500  # per evidence item
+MAX_EVIDENCE_CHARS = 2500  # per evidence item (a whole D1 grade report fits)
 
 SYSTEM_PROMPT = """\
 You verify one claim from a student's regrade appeal for a Python programming course. \

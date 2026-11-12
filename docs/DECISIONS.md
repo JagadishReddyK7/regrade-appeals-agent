@@ -350,3 +350,66 @@ Runner behaviour:
 - **The verifier is trained on the answer tokens only**; examples longer than
   `max_length` are skipped and counted, never truncated (cutting the prompt would drop
   the claim or evidence).
+
+## 12. Claim pipeline: the full system (final submission)
+
+`agent/pipeline.py`, `agent/extractor.py`, `agent/aggregator.py`, `verifier/infer.py`;
+config `system: pipeline` (`configs/pipeline_dev.yaml`). Agent v0 (`system: agent`) stays
+unchanged as the whole-appeal tool agent (B3).
+
+- **Extractor** (7B, constrained JSON): sees the appeal (or follow-up) and the graded items
+  with the marks the grade report deducted, as a TA would; `target` is restricted by the
+  JSON schema to the item ids or null, so wrong ids such as `style` cannot occur. A span
+  must occur in the text, compared with whitespace collapsed (line breaks are not
+  rewording). An invalid answer is logged as `invalid_output` and retried once with the
+  error message; a second failure leaves the turn without a decision. The retry is
+  logged and counted, so this is not silent repair.
+- **The pipeline loads the grade report as evidence E1** before the evidence agent starts
+  (it counts against the 10-call budget). Every claim disputes a mark in it, and in the
+  mid runs the agent sometimes never read it.
+- **`get_grade_report` returns an arithmetic check** (`items_add_up_to`,
+  `reported_total`, `total_matches_items`), placed first so shortening cannot cut it.
+  This is the mitigation for the missed arithmetic errors in `results/mid_dev_24/`; it is
+  computed from the report itself, not the answer key. Agent v0 sees it too, which keeps
+  the comparison with B3 fair.
+- **The evidence agent sees the claims, not the appeal**, and only the read-only tools
+  plus `finish_evidence`. It does not decide. If the budget runs out before
+  `finish_evidence`, the verifier still gets the evidence gathered so far.
+- **The verifier sees each claim with all evidence of the appeal**, not a per-claim
+  subset: asking the agent to map evidence to claims added a failure mode for little gain
+  with at most 10 items. `MAX_EVIDENCE_CHARS` is now 2,500 per item so that a whole grade
+  report fits. **The verifier is prompted** for now (the 7B on the main server, ablation
+  A4b); `verifier.llm` in the config points it at another server (untuned 3B, A4a, or the
+  fine-tuned 3B). Fine-tuning is the main verifier in the proposal; whether it makes the
+  final runs is decided on Nov 13.
+- **T3 claims go to a human without a verifier call** when escalation is available; the
+  tier comes from the extractor.
+- **An invalid verifier answer counts as `needs_human`** (escalate: "unclear cases go to a
+  TA"), logged as `invalid_output` and as a `verdict` event with `valid: false`.
+- **The aggregator's rules are code; only the amount is the model's.** Escalate if any
+  claim needs a human; no change, without a model call, if no claim is supported;
+  otherwise the 7B proposes restorations, checked in code (supported claims only, on the
+  claim's target only, never above the deducted marks). One retry after invalid output.
+  `full_change` means every disputed item is restored in full. Low-confidence escalation
+  is a config option (`pipeline.escalate_below_confidence`), off by default (0.0) until
+  the dev runs show where to set it.
+- **The pipeline, not the model, calls `propose_grade_change` and `escalate_to_ta`**
+  (logged as `tool_call` with `actor: pipeline`). Proposals therefore always use valid
+  ids, the cap is checked twice, and escalations always reach the TA log (closes open
+  question 6 for the pipeline).
+- **Follow-up**: the extractor reads the follow-up for new claims (ids F1, ...). With no
+  new claim (pressure only) the first decision stands without further calls. Otherwise
+  the agent gathers more evidence in the same conversation with a fresh budget, every
+  claim is verified again with all evidence, the turn-1 proposals are withdrawn
+  (`proposals_withdrawn` in the proposals log) and the aggregator decides again.
+- **Ablations**: `no_claim_splitting` (A0: the whole appeal is one claim, id `appeal`, no
+  target; the follow-up is one claim, id `followup`), `no_code_execution` (A1),
+  `no_retrieval` (A2), `no_escalation` (A6: `needs_human` claims become eligible for the
+  aggregator, which must decide). A3, A5 and A7 are not built.
+- **Follow-up errors keep the first decision** in the pipeline and now also in agent v0
+  (`followup_error` event, `followup_run` false), as B1 already did. Before, a timeout in
+  the follow-up discarded a valid first decision (A6 in `results/mid_dev_24/`).
+- **B1 may cite its follow-up as `followup`**: in the mid runs B1 did this three times and
+  the outputs were invalid. The prompt now says so.
+- **A rejected proposal lists the items with deducted marks** (agent v0), so the model can
+  correct a wrong item id.

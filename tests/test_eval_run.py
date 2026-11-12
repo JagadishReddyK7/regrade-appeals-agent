@@ -245,6 +245,12 @@ def test_b1_followup_error_keeps_first_decision(logger: RunLogger, tmp_path: Pat
     assert read_events(tmp_path / "events.jsonl", "followup_error")
 
 
+def test_b1_followup_may_cite_the_reply(logger: RunLogger) -> None:
+    mock = MockLLM([answer("escalate", 0, ["A2"]), answer("escalate", 0, ["followup"])])
+    output = DirectBaseline(mock, DATA).run(load_case("dev-002"), logger)
+    assert output.second is not None and output.second.verdicts[0].evidence_ids == ["followup"]
+
+
 def test_run_eval_b0_needs_no_llm_and_writes_breakdowns(tmp_path: Path) -> None:
     run_dir = run_eval(config(tmp_path, system="b0", b0={"mode": "accept"}))
     metrics = json.loads((run_dir / "metrics.json").read_text())

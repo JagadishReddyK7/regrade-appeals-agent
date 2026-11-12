@@ -46,9 +46,11 @@ search_precedents, propose_grade_change, escalate_to_ta, submit_decision.
 - `sandbox/` sandboxed execution, test runner, result cache
 - `llm/` model client (OpenAI-compatible for vLLM, plus a mock backend), vLLM launcher,
   smoke test
-- `agent/` schemas, tools, tool-calling loop (extractor, aggregator to come)
+- `agent/` schemas, tools, agent v0 loop (`loop.py`, the whole-appeal agent), and the full
+  system: `pipeline.py` with `extractor.py` and `aggregator.py`
 - `retrieval/` course-doc index, precedent store
-- `verifier/` prompt format, dummy data, QLoRA training (real training data to come);
+- `verifier/` prompt format, inference (`infer.py`), dummy data, QLoRA training (real
+  training data to come);
   plan in `docs/VERIFIER_PLAN.md`
 - `baselines/` B0-B4 (B1 done)
 - `eval/` metrics, run log, evaluation runner (statistics and LLM judge to come)

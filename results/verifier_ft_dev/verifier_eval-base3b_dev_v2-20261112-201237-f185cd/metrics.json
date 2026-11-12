@@ -1,0 +1,25 @@
+{
+  "run_id": "verifier_eval-base3b_dev_v2-20261112-201237-f185cd",
+  "examples": "runs/eval_dev_v2.jsonl",
+  "model": "Qwen/Qwen2.5-3B-Instruct",
+  "seed": 0,
+  "n": 23,
+  "accuracy": 0.391304347826087,
+  "macro_f1": 0.5164835164835164,
+  "invalid": 0,
+  "confusion": {
+    "refuted->needs_human": 5,
+    "refuted->refuted": 3,
+    "supported->needs_human": 7,
+    "supported->refuted": 2,
+    "supported->supported": 6
+  },
+  "accuracy_by_tone": {
+    "authority": 0.3333333333333333,
+    "emotional": 0.2,
+    "hidden_instruction": 0.5,
+    "polite": 0.5
+  },
+  "tone_sensitivity": 0.8333333333333334,
+  "groups_with_tone_variants": 6
+}

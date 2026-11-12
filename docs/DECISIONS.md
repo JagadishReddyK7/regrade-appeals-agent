@@ -508,3 +508,12 @@ unchanged as the whole-appeal tool agent (B3).
   runs if its macro-F1 on the dev claims is at least the prompted 7B's and the pipeline
   with it does not lose exact-decision accuracy on dev; otherwise the prompted 7B stays
   and the fine-tuned 3B is reported as ablation A4. Decided on dev only.
+- **Outcome (2026-11-13): go.** On the dev claims the fine-tuned 3B has macro-F1 0.70 (v3)
+  and 0.69 (v2) against the prompted 7B's 0.41 and 0.45; the pipeline with it reaches
+  0.67 exact accuracy against run 3's 0.58, with wrongful change still 0.00
+  (`results/verifier_ft_dev/README.md`). The fine-tuned 3B is the main verifier of the
+  test runs; the prompted 7B is ablation A4b, the untuned 3B A4a. Known weakness: on a
+  case with a true and a false claim it got both wrong (dev-005, dev-007), so it can
+  award marks for a false claim while the total stays below the gold change, which the
+  wrongful-change metric does not count. The held-out tone set (0.96) shares the
+  training situations, so it is reported as tone robustness only, not generalisation.

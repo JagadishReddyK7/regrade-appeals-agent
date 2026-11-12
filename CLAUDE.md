@@ -78,8 +78,9 @@ search_precedents, propose_grade_change, escalate_to_ta, submit_decision.
 
 ## Rules (important)
 - Test-split data is PRIVATE: never read, print, summarise or use `data/cases/test/` or
-  `data/private/` (test assignments, submissions and answer keys). Develop and tune
-  prompts only on `data/cases/dev/`. This protects the validity of the evaluation.
+  `data/private/` (test assignments, submissions and answer keys), nor the per-case test-run
+  outputs (`test_private/`, `test_private.zip`); only the aggregate `test_metrics` may be
+  read. Develop and tune prompts only on `data/cases/dev/`. This protects the validity of the evaluation.
 - Never expose the answer key to a system under evaluation: tools and prompts must not
   read `reference_grade.json`, the reference solution, or gold fields of a case
   (claims, planted_error, answer, followup.answer_after).

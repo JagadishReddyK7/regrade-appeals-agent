@@ -517,3 +517,37 @@ unchanged as the whole-appeal tool agent (B3).
   award marks for a false claim while the total stays below the gold change, which the
   wrongful-change metric does not count. The held-out tone set (0.96) shares the
   training situations, so it is reported as tone robustness only, not generalisation.
+
+## 15. Test runs (2026-11-13)
+
+`notebooks/test_runs.ipynb`, configs `configs/*_test.yaml`.
+
+- **Systems** (one Kaggle session, T4 x2, temperature 0, seed 0): B0 reject and accept,
+  B1, B3 (agent v0), the full system with the fine-tuned 3B verifier (main), and the
+  ablations A0 (no claim splitting), A1 (no code execution), A2 (no retrieval), A6 (no
+  escalation), A4b (prompted 7B verifier) and A4a (untuned 3B verifier). Ablations change
+  one thing from the main system, so they use the fine-tuned verifier. Not run: B2 and
+  B4 (not built), A3, A5, A7 (not built), the agent v0 ablations of the mid runs, and
+  repeated runs (time). Runs go in priority order (main system, B3, B1, A0, A4b, A1, A2,
+  A6, A4a) so an early stop loses the least important ones.
+- **Each test config is its dev config with only name, cases and data root changed**
+  (plus the one setting an ablation changes); `tests/test_test_configs.py` enforces it,
+  so no setting can be tuned for the test runs.
+- **The test set is checked against its frozen manifest** (`docs/TEST_SET_GUIDE.md` step
+  5) before the runs: the notebook records the number of cases, the manifest's hash and
+  the number of missing or changed files in `test_set_check.json`. A mismatch is a
+  warning, not a stop, so the runs are not lost to a path-format problem; a run with a
+  mismatch must be explained in the report.
+- **Statistics, three families with Holm correction within each** (`eval/stats.py`,
+  section 9 of this file): (1) RQ1a, pre-registered: main system vs B0 reject, B0
+  accept, B1 and B3 on wrongful-change and wrongful-refusal rate; (2) RQ1b: main system
+  vs A0 (design) and A4b, A4a (verifier) on tone sensitivity and pushback flip rate;
+  (3) exploratory: main system vs every other run on exact accuracy, wrongful change and
+  wrongful refusal. Only family 1 is confirmatory.
+- **Outputs are split.** `test_metrics.zip` holds only aggregate numbers (per run
+  `config.yaml` and `metrics.json`, the statistics, the manifest check, commit, `pip
+  freeze`); it is shared, committed under `results/` and may be analysed with Claude
+  Code. `test_private.zip` holds per-case events, predictions, proposals and server logs,
+  which contain test appeals: never committed (`.gitignore`), and blocked from Claude
+  Code (`.claude/settings.json`), as the test-set guide requires. Error analysis on test
+  cases is done by a team member by hand.

@@ -204,6 +204,43 @@ class SubmitDecisionArgs(StrictModel):
     evidence_ids: list[str] = Field(default_factory=list)
 
 
+# --- Claim pipeline outputs (extractor, aggregator) ---------------------------------------
+
+
+class ExtractedClaim(StrictModel):
+    """One claim found by the claim extractor; the span must occur in the appeal."""
+
+    id: str = NonEmptyStr
+    span: str = NonEmptyStr
+    target: str | None = None  # test id, rubric:..., policy:... or total; None if unclear
+    tier: Tier
+
+
+class ExtractorOutput(StrictModel):
+    claims: list[ExtractedClaim] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _unique_ids(self) -> "ExtractorOutput":
+        ids = [c.id for c in self.claims]
+        if len(ids) != len(set(ids)):
+            raise ValueError(f"duplicate claim ids: {ids}")
+        return self
+
+
+class Restoration(StrictModel):
+    claim_id: str = NonEmptyStr
+    item_id: str = NonEmptyStr  # the graded item whose marks are restored
+    marks: float = Field(gt=0)
+
+
+class AggregatorOutput(StrictModel):
+    """The aggregator's mark change: restorations for supported claims only."""
+
+    restorations: list[Restoration] = Field(default_factory=list)
+    rationale: str = NonEmptyStr
+    confidence: float = Field(ge=0, le=1)
+
+
 # --- Baseline outputs -------------------------------------------------------------------
 
 

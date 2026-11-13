@@ -4,6 +4,7 @@ supersedes them, so the agent can tell which rule is in force."""
 
 import re
 from dataclasses import asdict, dataclass
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -66,10 +67,37 @@ def announcement_docs(folder: Path) -> list[CourseDoc]:
     ]
 
 
+MONTHS = (
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+)
+
+
+def index_text(doc: CourseDoc) -> str:
+    """What BM25 indexes: title, text and, for announcements, the date in ISO form and in
+    words ("2026-09-19 19 September 2026"), so a student's "the 19 September
+    announcement" finds it."""
+    if doc.date is None:
+        return f"{doc.title} {doc.text}"
+    day = date.fromisoformat(doc.date)
+    month = MONTHS[day.month - 1]  # not strftime: month names depend on the locale
+    return f"{doc.title} {doc.date} {day.day} {month} {day.year} {doc.text}"
+
+
 class CourseDocIndex:
     def __init__(self, docs: list[CourseDoc]) -> None:
         self.docs = docs
-        self._bm25 = BM25Okapi([tokenize(f"{d.title} {d.text}") for d in docs])
+        self._bm25 = BM25Okapi([tokenize(index_text(d)) for d in docs])
 
     @classmethod
     def for_assignment(cls, folder: Path) -> "CourseDocIndex":

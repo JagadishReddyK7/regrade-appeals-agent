@@ -1,0 +1,47 @@
+# Training-only assignment for the verifier's training data (docs/VERIFIER_PLAN.md).
+# Never used for evaluation or prompt tuning.
+id: TR2
+title: Inventory dictionary
+module: inventory.py
+tests_file: test_inventory.py
+reference_autograder: standard
+autograders:
+  standard: autograder/standard
+  faulty_missing: autograder/faulty_missing  # planted: test_remove_missing follows the superseded A1
+rubric:
+  - id: test_add_new
+    kind: test
+    marks: 4
+    description: add_item inserts a new item
+  - id: test_add_existing
+    kind: test
+    marks: 4
+    description: add_item adds to the quantity of an existing item
+  - id: test_remove_partial
+    kind: test
+    marks: 4
+    description: remove_item lowers the quantity of an item
+  - id: test_remove_all
+    kind: test
+    marks: 4
+    description: remove_item deletes an item whose quantity reaches 0
+  - id: test_remove_missing
+    kind: test
+    marks: 4
+    description: remove_item handles an item that is not in the inventory
+  - id: test_total
+    kind: test
+    marks: 4
+    description: total_items adds up all quantities
+  - id: "rubric:hints"
+    kind: manual
+    marks: 2
+    description: Every function has type hints for its parameters and return value
+  - id: "rubric:approach"
+    kind: manual
+    marks: 4
+    description: No function modifies the inventory dictionary it is given
+policies:
+  - id: "policy:late_penalty"
+    marks: 10
+    description: Late submissions lose 10 marks; extensions are decided by course staff

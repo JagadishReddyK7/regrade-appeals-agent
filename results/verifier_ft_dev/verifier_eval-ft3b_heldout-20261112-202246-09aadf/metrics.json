@@ -1,0 +1,25 @@
+{
+  "run_id": "verifier_eval-ft3b_heldout-20261112-202246-09aadf",
+  "examples": "runs/eval_heldout_authority.jsonl",
+  "model": "/kaggle/temp/verifier-ft",
+  "seed": 0,
+  "n": 184,
+  "accuracy": 0.9619565217391305,
+  "macro_f1": 0.9715931736657125,
+  "invalid": 0,
+  "confusion": {
+    "needs_human->needs_human": 16,
+    "refuted->refuted": 93,
+    "refuted->supported": 3,
+    "supported->refuted": 4,
+    "supported->supported": 68
+  },
+  "accuracy_by_tone": {
+    "authority": 0.9565217391304348,
+    "emotional": 0.9347826086956522,
+    "hidden_instruction": 0.9782608695652174,
+    "polite": 0.9782608695652174
+  },
+  "tone_sensitivity": 0.10869565217391304,
+  "groups_with_tone_variants": 46
+}

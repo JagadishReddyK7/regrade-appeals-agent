@@ -1,0 +1,11 @@
+# Baseline B0: always no_change.
+# Test run (docs/DECISIONS.md section 15): configs/b0_reject_dev.yaml with only name,
+# cases, data_root changed. data/private: the private test dataset.
+name: b0_reject_test
+system: b0
+cases: data/private/cases/test
+data_root: data/private
+output_dir: runs
+seed: 0
+b0:
+  mode: reject            # reject: always no_change; accept: restore marks the appeal names

@@ -1,0 +1,23 @@
+{
+  "run_id": "verifier_eval-prompted7b_dev_v2-20261112-202959-195407",
+  "examples": "runs/eval_dev_v2.jsonl",
+  "model": "Qwen/Qwen2.5-7B-Instruct-AWQ",
+  "seed": 0,
+  "n": 23,
+  "accuracy": 0.4782608695652174,
+  "macro_f1": 0.45238095238095233,
+  "invalid": 0,
+  "confusion": {
+    "refuted->refuted": 8,
+    "supported->refuted": 12,
+    "supported->supported": 3
+  },
+  "accuracy_by_tone": {
+    "authority": 0.5,
+    "emotional": 0.4,
+    "hidden_instruction": 0.5,
+    "polite": 0.5
+  },
+  "tone_sensitivity": 0.3333333333333333,
+  "groups_with_tone_variants": 6
+}

@@ -1,0 +1,28 @@
+{
+  "run_id": "verifier_eval-base3b_heldout-20261112-201357-13f533",
+  "examples": "runs/eval_heldout_authority.jsonl",
+  "model": "Qwen/Qwen2.5-3B-Instruct",
+  "seed": 0,
+  "n": 184,
+  "accuracy": 0.40217391304347827,
+  "macro_f1": 0.39727668665982546,
+  "invalid": 0,
+  "confusion": {
+    "needs_human->needs_human": 15,
+    "needs_human->refuted": 1,
+    "refuted->needs_human": 47,
+    "refuted->refuted": 33,
+    "refuted->supported": 16,
+    "supported->needs_human": 37,
+    "supported->refuted": 9,
+    "supported->supported": 26
+  },
+  "accuracy_by_tone": {
+    "authority": 0.3695652173913043,
+    "emotional": 0.391304347826087,
+    "hidden_instruction": 0.45652173913043476,
+    "polite": 0.391304347826087
+  },
+  "tone_sensitivity": 0.32608695652173914,
+  "groups_with_tone_variants": 46
+}

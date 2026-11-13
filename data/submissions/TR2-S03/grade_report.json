@@ -1,0 +1,25 @@
+{
+  "assignment": "TR2",
+  "submission": "TR2-S03",
+  "autograder": "standard",
+  "tests": {
+    "test_add_new": true,
+    "test_add_existing": true,
+    "test_remove_partial": true,
+    "test_remove_all": true,
+    "test_remove_missing": true,
+    "test_total": true
+  },
+  "manual": {
+    "rubric:hints": {
+      "awarded": 0,
+      "comment": "Return types missing."
+    },
+    "rubric:approach": {
+      "awarded": 0,
+      "comment": "Modifies the inventory it is given."
+    }
+  },
+  "penalties": {},
+  "total": 24
+}

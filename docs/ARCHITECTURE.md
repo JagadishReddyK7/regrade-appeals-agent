@@ -48,6 +48,26 @@ AgentLoop.run()
   -> AgentResult(decision, followup_decision | None, counters)
 ```
 
+**Full system** (`PipelineSystem` in `eval/run.py` -> `agent/pipeline.py`; options from
+`PipelineOptions.from_config`, decisions in `docs/DECISIONS.md` section 12):
+```
+ClaimPipeline.run()
+  turn 1:
+    extract_claims(appeal)           agent/extractor.py   7B, JSON constrained to items with
+                                     deducted marks (A0: the whole appeal is one claim)
+    EvidenceAgent.first_turn()       grade report (E1) and submission (E2) loaded, then a tool loop with the
+                                     read-only tools + finish_evidence (10 calls per turn)
+    verify_claim(claim, all evidence) verifier/infer.py   T3 policy claims -> needs_human
+    aggregate(verdicts)              agent/aggregator.py  rules in code, amounts from the 7B
+    propose_grade_change / escalate_to_ta, called by the pipeline -> Decision (one verdict
+                                     per claim)
+  turn 2 (follow-up): extract claims with new evidence only; none -> first decision stands;
+    else more evidence (same conversation, fresh budget), verify the new claims (a supported
+    one replaces earlier verdicts on its item), withdraw turn-1 proposals, aggregate again
+  -> PipelineResult(decision, followup_decision | None, counters)
+```
+The verifier's client uses the main backend unless `verifier.llm` names another server.
+
 ### What each part may see
 
 | Part | Sees | Never sees |
@@ -64,6 +84,9 @@ AgentLoop.run()
 | `agent/schemas.py` | `Case`, `Claim`, `Answer`, `FollowUp`, `PlantedError`; `Decision`, `ClaimVerdict`; tool argument models; `DirectDecisionOutput` |
 | `agent/tools.py` | `TOOL_SPECS` (name, description, argument model), `ToolBox` (implementations), `ToolError`, `RejectedAction` |
 | `agent/loop.py` | `AgentLoop`, `run_agent`, `AgentResult`, output shortening, system prompt |
+| `agent/pipeline.py` | `ClaimPipeline`, `EvidenceAgent`, `PipelineOptions`, `run_pipeline` (full system) |
+| `agent/extractor.py` | `extract_claims`: appeal -> `ExtractedClaim`s (span, target, tier) |
+| `agent/aggregator.py` | `aggregate`: verdicts -> restorations or escalation; `check_restorations` |
 | `baselines/base.py` | `System` protocol, `SystemOutput` |
 | `baselines/b1_direct.py` | `DirectBaseline` |
 | `data/formats.py` | `Assignment`, `RubricItem`, `Policy`, `Announcement`, `GradeReport`, `ReferenceGrade`, loaders, `TOTAL_ID` |
@@ -81,7 +104,10 @@ AgentLoop.run()
 | `retrieval/course_docs.py` | `CourseDocIndex` (BM25 over spec sections, rubric items, announcements; the announcement in force first) |
 | `retrieval/precedents.py` | `Precedent`, `PrecedentStore` (JSONL, BM25 per assignment) |
 | `verifier/format.py` | verifier prompt and answer format, evidence bundles |
-| `verifier/train.py`, `verifier/dummy_data.py` | QLoRA training (GPU), dummy examples |
+| `verifier/infer.py` | `verify_claim`: one bundle -> `VerifierOutput` |
+| `verifier/train.py`, `verifier/dummy_data.py` | QLoRA training (GPU; `merge` saves a merged model for vLLM), dummy examples |
+| `verifier/train_data.py` | training data from `data/verifier_train/*.yaml` on TR1/TR2: real tool evidence, tone pairs, held-out authority tone |
+| `verifier/eval_data.py`, `verifier/evaluate.py` | evaluation claims rebuilt from a pipeline run's events; accuracy, macro-F1, tone sensitivity of a served verifier |
 | `sandbox/runner.py`, `sandbox/harness.py` | `SandboxRunner.run_test` / `run_code`; the child process that applies limits and blocks |
 | `sandbox/cache.py`, `sandbox/result.py` | result cache; `RunResult` |
 
@@ -95,10 +121,13 @@ Every record has `ts`, `event`, `run_id`, `case_id`, `seed`, `config_hash`.
 | `llm_call` / `llm_error` | `LLMClient.chat` | model, prompt_hash, tokens, latency_s, content, tool_calls / error |
 | `invalid_output` | `llm/parsing.py`, B1 | kind, schema, error, raw |
 | `tool_call` | `AgentLoop` | tool, arguments, status (ok/invalid/error/rejected), output, error, truncated_for_model |
-| `decision` | `AgentLoop`, B1 | decision, status/turn, counters |
+| `decision` | `AgentLoop`, B1, pipeline | decision, status/turn, counters |
+| `claims` | pipeline | turn, extracted claims |
+| `verdict` | pipeline | turn, claim_id, verdict, evidence_id, valid, source (verifier/tier) |
 | `case_error`, `followup_error` | `eval/run.py`, B1 | error, traceback |
 
-`proposals.jsonl` holds `grade_change_proposal` and `escalation` records (status `pending_ta`).
+`proposals.jsonl` holds `grade_change_proposal` and `escalation` records (status `pending_ta`)
+and, for the pipeline, `proposals_withdrawn` when the follow-up turn decides again.
 
 ## How to extend
 

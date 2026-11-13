@@ -1,0 +1,16 @@
+# The untuned Qwen2.5-3B-Instruct as verifier (ablation A4a), for verifier.evaluate.
+# Serve with: python -m llm.serve --config configs/verifier_3b_base.yaml --verifier
+name: verifier_3b_base
+verifier:
+  llm:
+    backend: openai
+    base_url: http://localhost:8001/v1
+    model: Qwen/Qwen2.5-3B-Instruct
+    timeout_s: 60
+    max_tokens: 64
+    serve:
+      gpu: 1
+      port: 8001
+      dtype: half
+      max_model_len: 8192
+      gpu_memory_utilization: 0.85

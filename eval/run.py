@@ -20,6 +20,7 @@ from typing import Any
 import yaml
 
 from agent.loop import AgentOptions, run_agent
+from agent.pipeline import PipelineOptions, run_pipeline
 from agent.schemas import Case
 from agent.tools import ToolBox
 from baselines.b0 import MODES as B0_MODES
@@ -40,7 +41,7 @@ from retrieval.precedents import PrecedentStore
 from sandbox.cache import ResultCache
 from sandbox.runner import SandboxRunner
 
-SYSTEMS = ("b0", "b1", "agent")  # b0 needs no LLM
+SYSTEMS = ("b0", "b1", "agent", "pipeline")  # b0 needs no LLM
 
 
 class AgentSystem:
@@ -89,6 +90,62 @@ class AgentSystem:
         )
 
 
+class PipelineSystem:
+    """The full system: claim extractor, evidence agent, verifier, aggregator
+    (`agent/pipeline.py`). The verifier uses `verifier_backend`, which is the main backend
+    unless the config names another server in `verifier.llm` (e.g. the fine-tuned 3B)."""
+
+    def __init__(
+        self,
+        backend: Backend,
+        verifier_backend: Backend,
+        data_root: Path,
+        runner: SandboxRunner,
+        proposals_log: RunLogger,
+        config: dict[str, Any],
+    ) -> None:
+        self.backend = backend
+        self.verifier_backend = verifier_backend
+        self.data_root = data_root
+        self.runner = runner
+        self.proposals_log = proposals_log
+        self.options = PipelineOptions.from_config(config)
+        self.precedents = load_precedents(config)
+        self.temperature = float(config.get("temperature", 0.0))
+        self.seed = int(config.get("seed", 0))
+
+    def run(self, case: Case, logger: RunLogger) -> SystemOutput:
+        tools = ToolBox(
+            self.data_root,
+            case.assignment,
+            case.submission,
+            self.runner,
+            self.proposals_log.for_case(case.case_id),
+            precedents=self.precedents,
+        )
+        result = run_pipeline(
+            case,
+            LLMClient(self.backend, logger),
+            LLMClient(self.verifier_backend, logger),
+            tools,
+            logger,
+            self.options,
+            temperature=self.temperature,
+            seed=self.seed,
+        )
+        return SystemOutput(
+            first=result.decision,
+            second=result.followup_decision,
+            followup_run=result.followup_run,
+        )
+
+
+def verifier_backend(config: dict[str, Any], backend: Backend) -> Backend:
+    """The backend named by `verifier.llm`, or the main backend."""
+    llm = (config.get("verifier") or {}).get("llm")
+    return backend_from_config(llm) if llm else backend
+
+
 def load_precedents(config: dict[str, Any]) -> PrecedentStore:
     """The precedent store named by `retrieval.precedents` in the config (a JSONL file),
     or an empty store."""
@@ -125,6 +182,8 @@ def load_config(path: Path) -> dict[str, Any]:
         raise ValueError(f"unknown B0 mode; choose from {B0_MODES}")
     if config["system"] == "agent":
         AgentOptions.from_config(config)  # fails early on unknown ablation flags
+    if config["system"] == "pipeline":
+        PipelineOptions.from_config(config)
     return config
 
 
@@ -159,6 +218,9 @@ def build_system(
         )
     cache_dir = Path(config.get("sandbox", {}).get("cache_dir", "sandbox/cache"))
     runner = SandboxRunner(cache=ResultCache(cache_dir))
+    if config["system"] == "pipeline":
+        verifier = verifier_backend(config, backend)
+        return PipelineSystem(backend, verifier, data_root, runner, proposals_log, config)
     return AgentSystem(backend, data_root, runner, proposals_log, config)
 
 

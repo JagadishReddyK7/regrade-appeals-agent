@@ -237,8 +237,12 @@ class AgentLoop:
                 text=self.case.followup.text, max_calls=self.options.max_calls
             )
             messages.append({"role": "user", "content": text})
+            try:
+                self.result.followup_decision = self._turn(messages)
+            except Exception as exc:  # a server error is not a change of mind: keep turn 1
+                self.logger.log("followup_error", error=repr(exc))
+                return self.result
             self.result.followup_run = True
-            self.result.followup_decision = self._turn(messages)
             self.result.followup_status = turn_status(self.result.followup_decision)
             self._log_result(
                 turn=2, decision=self.result.followup_decision, status=self.result.followup_status

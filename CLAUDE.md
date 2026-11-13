@@ -46,9 +46,11 @@ search_precedents, propose_grade_change, escalate_to_ta, submit_decision.
 - `sandbox/` sandboxed execution, test runner, result cache
 - `llm/` model client (OpenAI-compatible for vLLM, plus a mock backend), vLLM launcher,
   smoke test
-- `agent/` schemas, tools, tool-calling loop (extractor, aggregator to come)
+- `agent/` schemas, tools, agent v0 loop (`loop.py`, the whole-appeal agent), and the full
+  system: `pipeline.py` with `extractor.py` and `aggregator.py`
 - `retrieval/` course-doc index, precedent store
-- `verifier/` prompt format, dummy data, QLoRA training (real training data to come);
+- `verifier/` prompt format, inference (`infer.py`), QLoRA training (`train.py`), training
+  data from TR1/TR2 (`train_data.py`, `data/verifier_train/`), evaluation (`evaluate.py`);
   plan in `docs/VERIFIER_PLAN.md`
 - `baselines/` B0-B4 (B1 done)
 - `eval/` metrics, run log, evaluation runner (statistics and LLM judge to come)
@@ -76,8 +78,9 @@ search_precedents, propose_grade_change, escalate_to_ta, submit_decision.
 
 ## Rules (important)
 - Test-split data is PRIVATE: never read, print, summarise or use `data/cases/test/` or
-  `data/private/` (test assignments, submissions and answer keys). Develop and tune
-  prompts only on `data/cases/dev/`. This protects the validity of the evaluation.
+  `data/private/` (test assignments, submissions and answer keys), nor the per-case test-run
+  outputs (`test_private/`, `test_private.zip`); only the aggregate `test_metrics` may be
+  read. Develop and tune prompts only on `data/cases/dev/`. This protects the validity of the evaluation.
 - Never expose the answer key to a system under evaluation: tools and prompts must not
   read `reference_grade.json`, the reference solution, or gold fields of a case
   (claims, planted_error, answer, followup.answer_after).

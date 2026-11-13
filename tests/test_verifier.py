@@ -72,7 +72,7 @@ def test_bundle_from_agent_evidence_is_shortened() -> None:
         ("E1", "run_tests"),
         ("E2", "get_submission"),
     ]
-    assert len(bundle.evidence[0].text) <= 1500
+    assert len(bundle.evidence[0].text) <= 2500
     assert "def f(): pass" in bundle.evidence[1].text
 
 

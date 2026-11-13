@@ -28,6 +28,8 @@ __pycache__/
 sandbox/cache/
 
 # Kaggle and run outputs (selected runs are committed under results/)
+test_private.zip
+**/test_private/
 outputs/
 runs/
 *_outputs/

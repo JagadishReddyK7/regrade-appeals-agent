@@ -27,7 +27,7 @@ from agent.schemas import (
     SubmitDecisionArgs,
 )
 from data.formats import Assignment, load_assignment, load_grade_report
-from data.grader import deducted_marks, tests_path
+from data.grader import deducted_marks, reported_total, tests_path
 from eval.runlog import RunLogger
 from retrieval.course_docs import CourseDocIndex
 from retrieval.precedents import PrecedentStore
@@ -175,7 +175,14 @@ class ToolBox:
         rubric = [
             item.model_dump() for item in [*self.assignment.rubric, *self.assignment.policies]
         ]
-        return {"report": self.report.model_dump(), "rubric": rubric}
+        items_total = reported_total(self.assignment, self.report)
+        arithmetic = {
+            "items_add_up_to": items_total,
+            "reported_total": self.report.total,
+            "total_matches_items": math.isclose(items_total, self.report.total),
+        }
+        # The arithmetic check comes first so that shortening never cuts it off.
+        return {"arithmetic": arithmetic, "report": self.report.model_dump(), "rubric": rubric}
 
     def run_tests(self, args: RunTestsArgs) -> dict[str, Any]:
         test_ids = args.test_ids or self.assignment.test_ids()
@@ -203,11 +210,19 @@ class ToolBox:
         if args.delta > available and not math.isclose(args.delta, available):
             raise RejectedAction(
                 f"cannot restore {args.delta} marks on {args.item_id!r}: "
-                f"only {max(available, 0.0)} deducted marks remain"
+                f"only {max(available, 0.0)} deducted marks remain; "
+                f"items with deducted marks: {self.deducted}"
             )
         self.proposed[args.item_id] = self.proposed.get(args.item_id, 0.0) + args.delta
         self.proposals_log.log("grade_change_proposal", **args.model_dump(), status="pending_ta")
         return {"accepted": True, "proposed_total": self.proposed_total}
+
+    def withdraw_proposals(self, reason: str) -> None:
+        """Withdraw every pending proposal (the claim pipeline re-decides after a
+        follow-up); the withdrawal is logged for the TA like the proposals."""
+        if self.proposed:
+            self.proposals_log.log("proposals_withdrawn", items=dict(self.proposed), reason=reason)
+        self.proposed = {}
 
     def escalate_to_ta(self, args: EscalateArgs) -> dict[str, Any]:
         self.proposals_log.log("escalation", reason=args.reason, status="pending_ta")

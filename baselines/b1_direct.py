@@ -48,7 +48,8 @@ The student replied to your decision:
 {text}
 </followup>
 Decide again. Change your decision only if the reply contains new evidence that the \
-documents support. Answer with the same JSON format."""
+documents support. Answer with the same JSON format; the reply itself can be cited as \
+"followup"."""
 
 
 def course_context(data_root: Path, case: Case) -> tuple[str, set[str]]:
@@ -120,7 +121,8 @@ class DirectBaseline:
             {"role": "user", "content": FOLLOWUP_PROMPT.format(text=case.followup.text)}
         )
         try:
-            second = self._decide(client, case, messages, doc_ids, logger, turn=2)
+            ids = doc_ids | {"followup"}  # the reply itself may be cited
+            second = self._decide(client, case, messages, ids, logger, turn=2)
         except Exception as exc:  # a server error is not a change of mind: no follow-up result
             logger.log("followup_error", error=repr(exc))
             return SystemOutput(first=first)

@@ -131,6 +131,16 @@ def test_failed_followup_turn_has_no_second_decision(
     assert result.followup_status == "budget_exhausted"
 
 
+def test_followup_server_error_keeps_first_decision(
+    runner: SandboxRunner, logs: tuple[RunLogger, RunLogger], tmp_path: Path
+) -> None:
+    script = [call("get_grade_report"), submit()]  # the follow-up call finds no response
+    result, _ = run_with("dev-004", script, runner, logs, FOLLOWUP)
+    assert result.decision is not None and result.decision.outcome == "no_change"
+    assert not result.followup_run and result.followup_decision is None
+    assert read_events(tmp_path / "run.jsonl", "followup_error")
+
+
 def test_calls_after_submit_are_skipped_but_answered(
     runner: SandboxRunner, logs: tuple[RunLogger, RunLogger], tmp_path: Path
 ) -> None:

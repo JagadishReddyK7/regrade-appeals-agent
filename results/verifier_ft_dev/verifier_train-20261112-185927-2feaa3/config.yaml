@@ -1,0 +1,20 @@
+batch_size: 2
+check_examples: 6
+data: runs/verifier_train.jsonl
+learning_rate: 0.0001
+lora:
+  alpha: 32
+  dropout: 0.05
+  r: 16
+  target_modules:
+  - q_proj
+  - k_proj
+  - v_proj
+  - o_proj
+max_length: 4096
+max_steps: 300
+merge: true
+model: Qwen/Qwen2.5-3B-Instruct
+name: verifier_train
+output_dir: runs
+seed: 0

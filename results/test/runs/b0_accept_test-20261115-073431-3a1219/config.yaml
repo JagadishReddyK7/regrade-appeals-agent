@@ -1,0 +1,8 @@
+name: b0_accept_test
+system: b0
+cases: data/private/cases/test
+data_root: data/private
+output_dir: runs
+seed: 0
+b0:
+  mode: accept

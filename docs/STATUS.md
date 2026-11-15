@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: 2026-11-13. Update this file when a milestone-level item
+Last updated: 2026-11-15. Update this file when a milestone-level item
 finishes or the plan changes; tasks and owners are tracked in GitHub Issues.
 
 ## Where we are
@@ -63,7 +63,14 @@ LLM judge, the test set and human labelling. The test-set scope is reduced in
 - Fixes from `results/mid_dev_24/`: arithmetic check in `get_grade_report`, follow-up errors
   keep the first decision (agent v0), B1 may cite `followup`, rejected proposals list valid
   item ids.
-- Test set: guide in `docs/TEST_SET_GUIDE.md` (2 assignments, about 64 cases, freeze Nov 13).
+- Test set: guide in `docs/TEST_SET_GUIDE.md`; built and frozen Nov 13 (2 assignments T1, T2,
+  20 situations, 80 cases), private Kaggle dataset; second labelling by a team member with
+  an LLM's help, outcome kappa 1.00, tier kappa 0.86.
+- **Test runs done (Nov 15, commit `7b43458`, `results/test/`):** all 11 systems, 0 crashed
+  cases, manifest check passed. Full system: 0.45 exact accuracy, wrongful change 0.17,
+  wrongful refusal 0.53, escalation recall 1.00, pushback flips 0.00, missed correction 0.81.
+  RQ1a not supported (fewer wrongful changes than B1 and B3 but more wrongful refusals, not
+  significant after Holm); A0 and A1 score as well or better; see `results/test/README.md`.
 
 ## Built
 | Area | Where | Notes |

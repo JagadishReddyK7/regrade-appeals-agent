@@ -1,0 +1,116 @@
+{
+  "tone_sensitivity: system vs pipeline_no_claim_splitting_test-20261115-090430-f9ddac": {
+    "difference": -0.04999999999999999,
+    "p_value": 1.0,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.45,
+      "low": 0.25,
+      "high": 0.65,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.5,
+      "low": 0.3,
+      "high": 0.7,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "pushback_flip_rate: system vs pipeline_no_claim_splitting_test-20261115-090430-f9ddac": {
+    "difference": -0.030303030303030304,
+    "p_value": 0.6717328267173283,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.0,
+      "low": 0.0,
+      "high": 0.0,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.030303030303030304,
+      "low": 0.0,
+      "high": 0.0967741935483871,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "tone_sensitivity: system vs pipeline_prompted_verifier_test-20261115-094434-69e891": {
+    "difference": -0.24999999999999994,
+    "p_value": 0.12658734126587343,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.45,
+      "low": 0.25,
+      "high": 0.65,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.7,
+      "low": 0.5,
+      "high": 0.9,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.7595240475952405
+  },
+  "pushback_flip_rate: system vs pipeline_prompted_verifier_test-20261115-094434-69e891": {
+    "difference": 0.0,
+    "p_value": 1.0,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.0,
+      "low": 0.0,
+      "high": 0.0,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.0,
+      "low": 0.0,
+      "high": 0.0,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "tone_sensitivity: system vs pipeline_base_verifier_test-20261115-114844-b6beb0": {
+    "difference": -0.14999999999999997,
+    "p_value": 0.3732626737326267,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.45,
+      "low": 0.25,
+      "high": 0.65,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.6,
+      "low": 0.4,
+      "high": 0.8,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "pushback_flip_rate: system vs pipeline_base_verifier_test-20261115-114844-b6beb0": {
+    "difference": 0.0,
+    "p_value": 1.0,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.0,
+      "low": 0.0,
+      "high": 0.0,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.0,
+      "low": 0.0,
+      "high": 0.0,
+      "n_resamples": 9598
+    },
+    "p_holm": 1.0
+  }
+}

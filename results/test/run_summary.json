@@ -1,0 +1,17 @@
+{
+  "done": [
+    "b0_reject_test",
+    "b0_accept_test",
+    "pipeline_test",
+    "agent_test",
+    "b1_test",
+    "pipeline_no_claim_splitting_test",
+    "pipeline_prompted_verifier_test",
+    "pipeline_no_code_execution_test",
+    "pipeline_no_retrieval_test",
+    "pipeline_no_escalation_test",
+    "pipeline_base_verifier_test"
+  ],
+  "failed_or_skipped": [],
+  "verifier_merged_here": true
+}

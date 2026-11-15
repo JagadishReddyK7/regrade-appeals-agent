@@ -551,3 +551,11 @@ unchanged as the whole-appeal tool agent (B3).
   which contain test appeals: never committed (`.gitignore`), and blocked from Claude
   Code (`.claude/settings.json`), as the test-set guide requires. Error analysis on test
   cases is done by a team member by hand.
+- **Outcome (2026-11-15):** all 11 runs finished, 0 crashed cases, manifest check passed
+  (232 files, 0 missing or changed), commit `7b43458`; `results/test/README.md`. The
+  manifest check accepts paths relative to the dataset folder as well (PR #13), since the
+  dataset's manifest is in `sha256sum -c` format. RQ1a is not supported: the full system
+  has the fewest wrongful changes of the LLM systems (0.17 vs 0.33 for B1, 0.25 for B3)
+  but more wrongful refusals (0.53 vs 0.35, 0.38), with no difference significant after
+  Holm except against B0. No difference in family 2 is significant. These are the
+  reported results; nothing is changed or re-run after seeing them.

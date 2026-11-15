@@ -1,0 +1,572 @@
+{
+  "exact_decision_accuracy: system vs agent_test-20261115-081046-f89dd3": {
+    "difference": 0.0625,
+    "p_value": 0.6139386061393861,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.45,
+      "low": 0.275,
+      "high": 0.625,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.3875,
+      "low": 0.2125,
+      "high": 0.5625,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "wrongful_change_rate: system vs agent_test-20261115-081046-f89dd3": {
+    "difference": -0.07373903508771928,
+    "p_value": 0.4336566343365663,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.171875,
+      "low": 0.037718378756114765,
+      "high": 0.3333333333333333,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.24561403508771928,
+      "low": 0.12698412698412698,
+      "high": 0.375,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "wrongful_refusal_rate: system vs agent_test-20261115-081046-f89dd3": {
+    "difference": 0.15353651523864287,
+    "p_value": 0.23737626237376264,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.5319148936170213,
+      "low": 0.32558139534883723,
+      "high": 0.75,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.3783783783783784,
+      "low": 0.22857142857142856,
+      "high": 0.5333720930232552,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "exact_decision_accuracy: system vs b0_accept_test-20261115-073431-3a1219": {
+    "difference": 0.15000000000000002,
+    "p_value": 0.3003699630036996,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.45,
+      "low": 0.275,
+      "high": 0.625,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.3,
+      "low": 0.1,
+      "high": 0.5,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "wrongful_change_rate: system vs b0_accept_test-20261115-073431-3a1219": {
+    "difference": -0.528125,
+    "p_value": 0.00019998000199980003,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.171875,
+      "low": 0.037718378756114765,
+      "high": 0.3333333333333333,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.7,
+      "low": 0.5,
+      "high": 0.9,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.005999400059994001
+  },
+  "wrongful_refusal_rate: system vs b0_accept_test-20261115-073431-3a1219": {
+    "difference": 0.5319148936170213,
+    "p_value": 0.0011998800119988001,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.5319148936170213,
+      "low": 0.32558139534883723,
+      "high": 0.75,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.0,
+      "low": 0.0,
+      "high": 0.0,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.0347965203479652
+  },
+  "exact_decision_accuracy: system vs b0_reject_test-20261115-073431-7c9311": {
+    "difference": 0.15000000000000002,
+    "p_value": 0.31516848315168483,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.45,
+      "low": 0.275,
+      "high": 0.625,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.3,
+      "low": 0.1,
+      "high": 0.5,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "wrongful_change_rate: system vs b0_reject_test-20261115-073431-7c9311": {
+    "difference": 0.171875,
+    "p_value": 0.001999800019998,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.171875,
+      "low": 0.037718378756114765,
+      "high": 0.3333333333333333,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.0,
+      "low": 0.0,
+      "high": 0.0,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.05599440055994401
+  },
+  "wrongful_refusal_rate: system vs b0_reject_test-20261115-073431-7c9311": {
+    "difference": -0.46808510638297873,
+    "p_value": 0.0072992700729927005,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.5319148936170213,
+      "low": 0.32558139534883723,
+      "high": 0.75,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 1.0,
+      "low": 1.0,
+      "high": 1.0,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.1897810218978102
+  },
+  "exact_decision_accuracy: system vs b1_test-20261115-085519-155120": {
+    "difference": 0.16250000000000003,
+    "p_value": 0.2151784821517848,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.45,
+      "low": 0.275,
+      "high": 0.625,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.2875,
+      "low": 0.1375,
+      "high": 0.45,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "wrongful_change_rate: system vs b1_test-20261115-085519-155120": {
+    "difference": -0.15465561224489793,
+    "p_value": 0.033396660333966606,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.171875,
+      "low": 0.037718378756114765,
+      "high": 0.3333333333333333,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.32653061224489793,
+      "low": 0.13559322033898305,
+      "high": 0.5576923076923077,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.7347265273472653
+  },
+  "wrongful_refusal_rate: system vs b1_test-20261115-085519-155120": {
+    "difference": 0.178973717146433,
+    "p_value": 0.2243775622437756,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.5319148936170213,
+      "low": 0.32558139534883723,
+      "high": 0.75,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.35294117647058826,
+      "low": 0.14814814814814814,
+      "high": 0.5625,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "exact_decision_accuracy: system vs pipeline_base_verifier_test-20261115-114844-b6beb0": {
+    "difference": 0.25,
+    "p_value": 0.005499450054994501,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.45,
+      "low": 0.275,
+      "high": 0.625,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.2,
+      "low": 0.075,
+      "high": 0.35,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.14848515148485153
+  },
+  "wrongful_change_rate: system vs pipeline_base_verifier_test-20261115-114844-b6beb0": {
+    "difference": -0.19654605263157893,
+    "p_value": 0.010198980101989802,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.171875,
+      "low": 0.037718378756114765,
+      "high": 0.3333333333333333,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.3684210526315789,
+      "low": 0.09523809523809523,
+      "high": 0.6251157407407391,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.2549745025497451
+  },
+  "wrongful_refusal_rate: system vs pipeline_base_verifier_test-20261115-114844-b6beb0": {
+    "difference": 0.24620060790273557,
+    "p_value": 0.0613938606139386,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.5319148936170213,
+      "low": 0.32558139534883723,
+      "high": 0.75,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.2857142857142857,
+      "low": 0.0,
+      "high": 0.6923076923076923,
+      "n_resamples": 9999
+    },
+    "p_holm": 1.0
+  },
+  "exact_decision_accuracy: system vs pipeline_no_claim_splitting_test-20261115-090430-f9ddac": {
+    "difference": -0.03749999999999998,
+    "p_value": 0.8074192580741926,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.45,
+      "low": 0.275,
+      "high": 0.625,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.4875,
+      "low": 0.3125,
+      "high": 0.6625,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "wrongful_change_rate: system vs pipeline_no_claim_splitting_test-20261115-090430-f9ddac": {
+    "difference": 0.06661184210526316,
+    "p_value": 0.10538946105389461,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.171875,
+      "low": 0.037718378756114765,
+      "high": 0.3333333333333333,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.10526315789473684,
+      "low": 0.02631578947368421,
+      "high": 0.20833333333333334,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "wrongful_refusal_rate: system vs pipeline_no_claim_splitting_test-20261115-090430-f9ddac": {
+    "difference": -0.07225177304964536,
+    "p_value": 0.42845715428457154,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.5319148936170213,
+      "low": 0.32558139534883723,
+      "high": 0.75,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.6041666666666666,
+      "low": 0.42857142857142855,
+      "high": 0.7727272727272727,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "exact_decision_accuracy: system vs pipeline_no_code_execution_test-20261115-101535-bb7361": {
+    "difference": -0.1375,
+    "p_value": 0.025797420257974202,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.45,
+      "low": 0.275,
+      "high": 0.625,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.5875,
+      "low": 0.4,
+      "high": 0.7625,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.5933406659334066
+  },
+  "wrongful_change_rate: system vs pipeline_no_code_execution_test-20261115-101535-bb7361": {
+    "difference": 0.015625,
+    "p_value": 1.0,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.171875,
+      "low": 0.037718378756114765,
+      "high": 0.3333333333333333,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.15625,
+      "low": 0.019230769230769232,
+      "high": 0.3090909090909091,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "wrongful_refusal_rate: system vs pipeline_no_code_execution_test-20261115-101535-bb7361": {
+    "difference": 0.21276595744680848,
+    "p_value": 0.015498450154984501,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.5319148936170213,
+      "low": 0.32558139534883723,
+      "high": 0.75,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.3191489361702128,
+      "low": 0.11362564322469992,
+      "high": 0.5535714285714286,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.37196280371962803
+  },
+  "exact_decision_accuracy: system vs pipeline_no_escalation_test-20261115-111440-7cdb46": {
+    "difference": 0.03750000000000003,
+    "p_value": 1.0,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.45,
+      "low": 0.275,
+      "high": 0.625,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.4125,
+      "low": 0.2375,
+      "high": 0.5875,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "wrongful_change_rate: system vs pipeline_no_escalation_test-20261115-111440-7cdb46": {
+    "difference": -0.035917207792207806,
+    "p_value": 0.49505049495050496,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.171875,
+      "low": 0.037718378756114765,
+      "high": 0.3333333333333333,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.2077922077922078,
+      "low": 0.07792207792207792,
+      "high": 0.35526315789473684,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "wrongful_refusal_rate: system vs pipeline_no_escalation_test-20261115-111440-7cdb46": {
+    "difference": 0.0,
+    "p_value": 1.0,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.5319148936170213,
+      "low": 0.32558139534883723,
+      "high": 0.75,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.5319148936170213,
+      "low": 0.32558139534883723,
+      "high": 0.75,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "exact_decision_accuracy: system vs pipeline_no_retrieval_test-20261115-104300-509830": {
+    "difference": 0.012500000000000011,
+    "p_value": 1.0,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.45,
+      "low": 0.275,
+      "high": 0.625,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.4375,
+      "low": 0.2746875000000028,
+      "high": 0.6125,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "wrongful_change_rate: system vs pipeline_no_retrieval_test-20261115-104300-509830": {
+    "difference": 0.03125,
+    "p_value": 0.5058494150584941,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.171875,
+      "low": 0.037718378756114765,
+      "high": 0.3333333333333333,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.140625,
+      "low": 0.019230769230769232,
+      "high": 0.28125,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "wrongful_refusal_rate: system vs pipeline_no_retrieval_test-20261115-104300-509830": {
+    "difference": -0.06382978723404253,
+    "p_value": 0.6183381661833817,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.5319148936170213,
+      "low": 0.32558139534883723,
+      "high": 0.75,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.5957446808510638,
+      "low": 0.3870784457478007,
+      "high": 0.8,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "exact_decision_accuracy: system vs pipeline_prompted_verifier_test-20261115-094434-69e891": {
+    "difference": -0.012500000000000011,
+    "p_value": 1.0,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.45,
+      "low": 0.275,
+      "high": 0.625,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.4625,
+      "low": 0.325,
+      "high": 0.6125,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "wrongful_change_rate: system vs pipeline_prompted_verifier_test-20261115-094434-69e891": {
+    "difference": 0.125,
+    "p_value": 0.18768123187681232,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.171875,
+      "low": 0.037718378756114765,
+      "high": 0.3333333333333333,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.046875,
+      "low": 0.0,
+      "high": 0.09836065573770492,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  },
+  "wrongful_refusal_rate: system vs pipeline_prompted_verifier_test-20261115-094434-69e891": {
+    "difference": -0.14893617021276595,
+    "p_value": 0.3765623437656234,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.5319148936170213,
+      "low": 0.32558139534883723,
+      "high": 0.75,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.6808510638297872,
+      "low": 0.5957446808510638,
+      "high": 0.7708333333333334,
+      "n_resamples": 10000
+    },
+    "p_holm": 1.0
+  }
+}

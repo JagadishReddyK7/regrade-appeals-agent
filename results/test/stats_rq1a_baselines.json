@@ -1,0 +1,154 @@
+{
+  "wrongful_change_rate: system vs b0_reject_test-20261115-073431-7c9311": {
+    "difference": 0.171875,
+    "p_value": 0.001999800019998,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.171875,
+      "low": 0.037718378756114765,
+      "high": 0.3333333333333333,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.0,
+      "low": 0.0,
+      "high": 0.0,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.011998800119988001
+  },
+  "wrongful_refusal_rate: system vs b0_reject_test-20261115-073431-7c9311": {
+    "difference": -0.46808510638297873,
+    "p_value": 0.0072992700729927005,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.5319148936170213,
+      "low": 0.32558139534883723,
+      "high": 0.75,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 1.0,
+      "low": 1.0,
+      "high": 1.0,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.0364963503649635
+  },
+  "wrongful_change_rate: system vs b0_accept_test-20261115-073431-3a1219": {
+    "difference": -0.528125,
+    "p_value": 0.00019998000199980003,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.171875,
+      "low": 0.037718378756114765,
+      "high": 0.3333333333333333,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.7,
+      "low": 0.5,
+      "high": 0.9,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.0015998400159984002
+  },
+  "wrongful_refusal_rate: system vs b0_accept_test-20261115-073431-3a1219": {
+    "difference": 0.5319148936170213,
+    "p_value": 0.0011998800119988001,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.5319148936170213,
+      "low": 0.32558139534883723,
+      "high": 0.75,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.0,
+      "low": 0.0,
+      "high": 0.0,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.008399160083991601
+  },
+  "wrongful_change_rate: system vs b1_test-20261115-085519-155120": {
+    "difference": -0.15465561224489793,
+    "p_value": 0.033396660333966606,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.171875,
+      "low": 0.037718378756114765,
+      "high": 0.3333333333333333,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.32653061224489793,
+      "low": 0.13559322033898305,
+      "high": 0.5576923076923077,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.13358664133586642
+  },
+  "wrongful_refusal_rate: system vs b1_test-20261115-085519-155120": {
+    "difference": 0.178973717146433,
+    "p_value": 0.2243775622437756,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.5319148936170213,
+      "low": 0.32558139534883723,
+      "high": 0.75,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.35294117647058826,
+      "low": 0.14814814814814814,
+      "high": 0.5625,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.6731326867313269
+  },
+  "wrongful_change_rate: system vs agent_test-20261115-081046-f89dd3": {
+    "difference": -0.07373903508771928,
+    "p_value": 0.4336566343365663,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.171875,
+      "low": 0.037718378756114765,
+      "high": 0.3333333333333333,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.24561403508771928,
+      "low": 0.12698412698412698,
+      "high": 0.375,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.6731326867313269
+  },
+  "wrongful_refusal_rate: system vs agent_test-20261115-081046-f89dd3": {
+    "difference": 0.15353651523864287,
+    "p_value": 0.23737626237376264,
+    "n_resamples": 10000,
+    "exact": false,
+    "system_ci": {
+      "estimate": 0.5319148936170213,
+      "low": 0.32558139534883723,
+      "high": 0.75,
+      "n_resamples": 10000
+    },
+    "other_ci": {
+      "estimate": 0.3783783783783784,
+      "low": 0.22857142857142856,
+      "high": 0.5333720930232552,
+      "n_resamples": 10000
+    },
+    "p_holm": 0.6731326867313269
+  }
+}

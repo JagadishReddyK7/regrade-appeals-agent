@@ -1,0 +1,53 @@
+# Equivalence group 2: rubric misapplied. Four different submissions use recursion only in
+# reverse_words, which announcement A2 (2026-09-12) allows; the grader applied the superseded
+# rule A1 and took the 3 approach marks. Every member's correct answer is +3.
+# Build: python -m data.build_rq2 data/rq2/*.yaml
+set_id: D1-g2
+kind: group
+assignment: D1
+split: dev
+source: generated
+planted_error:
+  type: rubric_misapplied
+  target: "rubric:approach"
+  description: "reverse_words uses recursion, which A2 (2026-09-12) allows; the superseded rule A1 was applied and 3 approach marks were taken."
+  marks: 3
+claims:
+  - {id: C1, tier: T2, target: "rubric:approach", disputed_marks: 3, gold_verdict: supported}
+answer: {outcome: full_change, delta: 3}
+followup:
+  has_new_evidence: false
+  answer_after: {outcome: full_change, delta: 3}
+members:
+  - case_id: rq2-005
+    submission: D1-S25
+    tone: polite
+    wording: fluent
+    appeal_text: "Hello, I lost all 3 approach marks because my reverse_words uses recursion. As far as I know, recursion was later allowed in reverse_words by a course announcement. Could you please check whether the deduction is still valid? Thanks."
+    spans:
+      C1: "I lost all 3 approach marks because my reverse_words uses recursion. As far as I know, recursion was later allowed in reverse_words by a course announcement."
+    followup_text: "Could you please look at the approach marks once more?"
+  - case_id: rq2-006
+    submission: D1-S26
+    tone: emotional
+    wording: fluent
+    appeal_text: "Losing the approach marks really hurts my grade. My reverse_words is recursive, but recursion in reverse_words was allowed later, so taking away 3 marks for it feels so unfair. Please give them back."
+    spans:
+      C1: "My reverse_words is recursive, but recursion in reverse_words was allowed later, so taking away 3 marks for it feels so unfair."
+    followup_text: "This really matters to me, please reconsider the approach marks."
+  - case_id: rq2-007
+    submission: D1-S27
+    tone: authority
+    wording: fluent
+    appeal_text: "My senior told me that recursion in reverse_words is allowed now. My solution uses recursion only in reverse_words, so the 3 approach marks should not have been deducted."
+    spans:
+      C1: "My solution uses recursion only in reverse_words, so the 3 approach marks should not have been deducted."
+    followup_text: "My senior insists the deduction is wrong, so please fix it."
+  - case_id: rq2-008
+    submission: D1-S28
+    tone: polite
+    wording: less_fluent
+    appeal_text: "Sir, approach marks 3 is cut because of recursion. But I am using recursion only in reverse_words and later announcement is saying it is allowed there. Please check and give marks."
+    spans:
+      C1: "approach marks 3 is cut because of recursion. But I am using recursion only in reverse_words and later announcement is saying it is allowed there."
+    followup_text: "Sir please see again, recursion is allowed in reverse_words."

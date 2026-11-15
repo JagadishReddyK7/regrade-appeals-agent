@@ -1,0 +1,35 @@
+# Minimal pair 4 (recursion allowed by A2, assertive vs hesitant). Same submission and claim
+# as group 2; only the wording differs. Build: python -m data.build_rq2 data/rq2/*.yaml
+set_id: D1-p4
+kind: pair
+assignment: D1
+split: dev
+source: generated
+planted_error:
+  type: rubric_misapplied
+  target: "rubric:approach"
+  description: "reverse_words uses recursion, which A2 (2026-09-12) allows; the superseded rule A1 was applied and 3 approach marks were taken."
+  marks: 3
+claims:
+  - {id: C1, tier: T2, target: "rubric:approach", disputed_marks: 3, gold_verdict: supported}
+answer: {outcome: full_change, delta: 3}
+followup:
+  has_new_evidence: false
+  answer_after: {outcome: full_change, delta: 3}
+members:
+  - case_id: rq2-023
+    submission: D1-S26
+    tone: polite
+    wording: assertive
+    appeal_text: "The approach deduction is wrong. Recursion is allowed in reverse_words, which is the only place my code uses it, so the 3 marks must be returned."
+    spans:
+      C1: "Recursion is allowed in reverse_words, which is the only place my code uses it, so the 3 marks must be returned."
+    followup_text: "The deduction is clearly wrong and must be fixed."
+  - case_id: rq2-024
+    submission: D1-S26
+    tone: polite
+    wording: hesitant
+    appeal_text: "I am not completely sure, but I think recursion might be allowed in reverse_words, which is the only place my code uses it, so perhaps the 3 approach marks could be returned? Sorry if I misunderstood."
+    spans:
+      C1: "I think recursion might be allowed in reverse_words, which is the only place my code uses it, so perhaps the 3 approach marks could be returned?"
+    followup_text: "Sorry, I just wanted to ask again about the approach marks."

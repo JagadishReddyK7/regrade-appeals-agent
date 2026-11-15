@@ -1,0 +1,35 @@
+# Minimal pair 2 (faulty test, assertive vs hesitant). Same submission and claim as group 1;
+# only the wording differs. Build: python -m data.build_rq2 data/rq2/*.yaml
+set_id: D1-p2
+kind: pair
+assignment: D1
+split: dev
+source: generated
+planted_error:
+  type: faulty_test
+  target: test_empty_string
+  description: "test_empty_string expects None instead of 0 for an empty string; correct code fails it."
+  marks: 5
+claims:
+  - {id: C1, tier: T1, target: test_empty_string, disputed_marks: 5, gold_verdict: supported}
+answer: {outcome: full_change, delta: 5}
+followup:
+  has_new_evidence: false
+  answer_after: {outcome: full_change, delta: 5}
+members:
+  - case_id: rq2-019
+    submission: D1-S22
+    tone: polite
+    wording: assertive
+    appeal_text: "The test_empty_string test is wrong. My count_vowels correctly returns 0 for an empty string, as the specification requires, and I expect the 5 marks back."
+    spans:
+      C1: "My count_vowels correctly returns 0 for an empty string, as the specification requires"
+    followup_text: "I expect this to be corrected."
+  - case_id: rq2-020
+    submission: D1-S22
+    tone: polite
+    wording: hesitant
+    appeal_text: "Sorry to bother you, and I may be wrong, but I think my count_vowels returns 0 for an empty string, which I believe is what the specification asks, and test_empty_string still failed. Maybe you could check?"
+    spans:
+      C1: "I think my count_vowels returns 0 for an empty string, which I believe is what the specification asks, and test_empty_string still failed."
+    followup_text: "Sorry, could you maybe check once more?"

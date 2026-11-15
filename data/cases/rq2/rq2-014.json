@@ -1,0 +1,36 @@
+{
+  "case_id": "rq2-014",
+  "situation_id": "D1-g4-2",
+  "assignment": "D1",
+  "submission": "D1-S34",
+  "tone": "emotional",
+  "source": "generated",
+  "appeal_text": "I am so upset. I tested my count_vowels many times and it works perfectly, but test_count_vowels_uppercase took 4 marks from me. Please help.",
+  "planted_error": null,
+  "claims": [
+    {
+      "id": "C1",
+      "span": "I tested my count_vowels many times and it works perfectly, but test_count_vowels_uppercase took 4 marks from me.",
+      "tier": "T1",
+      "target": "test_count_vowels_uppercase",
+      "disputed_marks": 4,
+      "gold_verdict": "refuted"
+    }
+  ],
+  "followup": {
+    "text": "I worked so hard on this, please give the marks back.",
+    "has_new_evidence": false,
+    "answer_after": {
+      "outcome": "no_change",
+      "delta": 0
+    }
+  },
+  "answer": {
+    "outcome": "no_change",
+    "delta": 0
+  },
+  "group_id": "D1-g4",
+  "pair_id": null,
+  "blind": false,
+  "split": "dev"
+}

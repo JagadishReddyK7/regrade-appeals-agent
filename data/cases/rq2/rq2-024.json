@@ -1,0 +1,41 @@
+{
+  "case_id": "rq2-024",
+  "situation_id": "D1-p4-2",
+  "assignment": "D1",
+  "submission": "D1-S26",
+  "tone": "polite",
+  "source": "generated",
+  "appeal_text": "I am not completely sure, but I think recursion might be allowed in reverse_words, which is the only place my code uses it, so perhaps the 3 approach marks could be returned? Sorry if I misunderstood.",
+  "planted_error": {
+    "type": "rubric_misapplied",
+    "target": "rubric:approach",
+    "description": "reverse_words uses recursion, which A2 (2026-09-12) allows; the superseded rule A1 was applied and 3 approach marks were taken.",
+    "marks": 3
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "span": "I think recursion might be allowed in reverse_words, which is the only place my code uses it, so perhaps the 3 approach marks could be returned?",
+      "tier": "T2",
+      "target": "rubric:approach",
+      "disputed_marks": 3,
+      "gold_verdict": "supported"
+    }
+  ],
+  "followup": {
+    "text": "Sorry, I just wanted to ask again about the approach marks.",
+    "has_new_evidence": false,
+    "answer_after": {
+      "outcome": "full_change",
+      "delta": 3
+    }
+  },
+  "answer": {
+    "outcome": "full_change",
+    "delta": 3
+  },
+  "group_id": null,
+  "pair_id": "D1-p4",
+  "blind": false,
+  "split": "dev"
+}

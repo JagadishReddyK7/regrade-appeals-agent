@@ -1,0 +1,41 @@
+{
+  "case_id": "rq2-027",
+  "situation_id": "D1-p6-1",
+  "assignment": "D1",
+  "submission": "D1-S30",
+  "tone": "polite",
+  "source": "generated",
+  "appeal_text": "My style mark is wrong. My reverse_words has a docstring, so a style mark of 0 is not acceptable and must be corrected.",
+  "planted_error": {
+    "type": "missed_partial_credit",
+    "target": "rubric:style",
+    "description": "One of the two functions has a docstring; A3 gives 1 of the 2 style marks in that case, but 0 were awarded.",
+    "marks": 1
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "span": "My reverse_words has a docstring, so a style mark of 0 is not acceptable",
+      "tier": "T2",
+      "target": "rubric:style",
+      "disputed_marks": 2,
+      "gold_verdict": "supported"
+    }
+  ],
+  "followup": {
+    "text": "This must be corrected.",
+    "has_new_evidence": false,
+    "answer_after": {
+      "outcome": "partial_change",
+      "delta": 1
+    }
+  },
+  "answer": {
+    "outcome": "partial_change",
+    "delta": 1
+  },
+  "group_id": null,
+  "pair_id": "D1-p6",
+  "blind": false,
+  "split": "dev"
+}

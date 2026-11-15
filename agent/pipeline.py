@@ -34,6 +34,7 @@ from agent.schemas import (
     ExtractedClaim,
     NoArgs,
     ProposeGradeChangeArgs,
+    SearchArgs,
 )
 from agent.tools import (
     SPECS_BY_NAME,
@@ -79,11 +80,13 @@ class PipelineOptions:
     retrieval: bool = True  # False: ablation A2
     escalation: bool = True  # False: ablation A6
     escalate_below_confidence: float = 0.0  # 0: never escalate for low confidence
+    preload_precedents: int = 0  # RQ2 precedent runs: top-k precedents loaded as evidence
 
     @classmethod
     def from_config(cls, config: dict[str, Any]) -> "PipelineOptions":
         """Options from `pipeline` (max_tool_calls, escalate_below_confidence), top-level
-        `followup` and `ablation` (flags in PIPELINE_FLAGS, all default false)."""
+        `followup`, `ablation` (flags in PIPELINE_FLAGS, all default false) and
+        `retrieval.preload_precedents` (0, the default, loads none: the frozen system)."""
         ablation = config.get("ablation") or {}
         unknown = sorted(set(ablation) - set(PIPELINE_FLAGS))
         if unknown:
@@ -97,6 +100,7 @@ class PipelineOptions:
             retrieval=not ablation.get("no_retrieval", False),
             escalation=not ablation.get("no_escalation", False),
             escalate_below_confidence=float(section.get("escalate_below_confidence", 0.0)),
+            preload_precedents=int((config.get("retrieval") or {}).get("preload_precedents", 0)),
         )
 
     def tool_schemas(self) -> list[dict[str, Any]]:
@@ -175,10 +179,15 @@ class EvidenceAgent:
         start = self.result.tool_calls
         report = self._run_tool("get_grade_report", NoArgs(), actor="pipeline")
         submission = self._run_tool("get_submission", NoArgs(), actor="pipeline")
+        loaded = f"{report}\n\n{submission}"
+        if self.options.preload_precedents and self.options.retrieval:  # RQ2 precedent runs
+            k = self.options.preload_precedents
+            query = SearchArgs(query=case.appeal_text, k=k)
+            loaded += "\n\n" + self._run_tool("search_precedents", query, actor="pipeline")
         user = f"Assignment: {case.assignment}\nSubmission: {case.submission}\n\n"
         if not self.options.retrieval:
             user += f"Rubric:\n{rubric_text(self.tools.assignment)}\n\n"
-        user += f"Claims:\n{claims_text(claims)}\n\nAlready loaded:\n{report}\n\n{submission}"
+        user += f"Claims:\n{claims_text(claims)}\n\nAlready loaded:\n{loaded}"
         self.messages = [
             {"role": "system", "content": evidence_prompt(self.options)},
             {"role": "user", "content": user},

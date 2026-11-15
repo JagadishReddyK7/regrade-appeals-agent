@@ -1,0 +1,28 @@
+# RQ2: B3 (agent v0, whole appeal) on the consistency cases.
+# Generated from configs/agent_dev.yaml: only name, cases, followup and the RQ2 settings differ
+# (docs/DECISIONS.md section 16).
+name: rq2_agent
+system: agent
+cases: data/cases/rq2
+data_root: data
+output_dir: runs
+seed: 0
+temperature: 0.0
+followup: false         # RQ2 measures first decisions; no pushback turn
+llm:
+  backend: openai       # an OpenAI-compatible server, e.g. vLLM on Kaggle
+  base_url: http://localhost:8000/v1
+  model: Qwen/Qwen2.5-7B-Instruct-AWQ
+  timeout_s: 120
+  serve:                # how llm.serve starts vLLM (Kaggle T4: float16, no bfloat16)
+    gpu: 0
+    port: 8000
+    dtype: half
+    quantization: awq
+    max_model_len: 16384
+    gpu_memory_utilization: 0.85
+    tool_call_parser: hermes
+agent:
+  max_tool_calls: 10
+sandbox:
+  cache_dir: sandbox/cache

@@ -1,0 +1,36 @@
+{
+  "case_id": "rq2-016",
+  "situation_id": "D1-g4-4",
+  "assignment": "D1",
+  "submission": "D1-S36",
+  "tone": "polite",
+  "source": "generated",
+  "appeal_text": "Sir my count_vowels is working correct for all words, I checked. Why test_count_vowels_uppercase is failing? Please give the 4 marks.",
+  "planted_error": null,
+  "claims": [
+    {
+      "id": "C1",
+      "span": "my count_vowels is working correct for all words, I checked. Why test_count_vowels_uppercase is failing?",
+      "tier": "T1",
+      "target": "test_count_vowels_uppercase",
+      "disputed_marks": 4,
+      "gold_verdict": "refuted"
+    }
+  ],
+  "followup": {
+    "text": "Sir please check again, my code is correct.",
+    "has_new_evidence": false,
+    "answer_after": {
+      "outcome": "no_change",
+      "delta": 0
+    }
+  },
+  "answer": {
+    "outcome": "no_change",
+    "delta": 0
+  },
+  "group_id": "D1-g4",
+  "pair_id": null,
+  "blind": false,
+  "split": "dev"
+}

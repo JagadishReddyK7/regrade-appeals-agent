@@ -63,6 +63,10 @@ LLM judge, the test set and human labelling. The test-set scope is reduced in
 - Fixes from `results/mid_dev_24/`: arithmetic check in `get_grade_report`, follow-up errors
   keep the first decision (agent v0), B1 may cite `followup`, rejected proposals list valid
   item ids.
+- **RQ2 study added after the submission (Nov 16, `docs/DECISIONS.md` section 16):** 32
+  consistency cases on D1 (4 equivalence groups, 8 minimal pairs), consistency metrics,
+  precedent runs in three orders and a planted wrong precedent; run with
+  `notebooks/rq2_runs.ipynb`, results to `results/rq2/`.
 - Test set: guide in `docs/TEST_SET_GUIDE.md`; built and frozen Nov 13 (2 assignments T1, T2,
   20 situations, 80 cases), private Kaggle dataset; second labelling by a team member with
   an LLM's help, outcome kappa 1.00, tier kappa 0.86.

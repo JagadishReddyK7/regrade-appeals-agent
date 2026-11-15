@@ -31,5 +31,8 @@ jobs:
       - name: Validate dev cases
         run: python -m data.validate data/cases/dev
 
+      - name: Validate RQ2 consistency cases
+        run: python -m data.validate data/cases/rq2
+
       - name: Test
         run: python -m pytest -q -rs

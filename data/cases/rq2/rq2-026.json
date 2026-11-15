@@ -1,0 +1,41 @@
+{
+  "case_id": "rq2-026",
+  "situation_id": "D1-p5-2",
+  "assignment": "D1",
+  "submission": "D1-S29",
+  "tone": "polite",
+  "source": "generated",
+  "appeal_text": "Hello, I am getting 0 of 2 style marks, but count_vowels is having docstring. Please check if some style marks is coming for me.",
+  "planted_error": {
+    "type": "missed_partial_credit",
+    "target": "rubric:style",
+    "description": "One of the two functions has a docstring; A3 gives 1 of the 2 style marks in that case, but 0 were awarded.",
+    "marks": 1
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "span": "I am getting 0 of 2 style marks, but count_vowels is having docstring.",
+      "tier": "T2",
+      "target": "rubric:style",
+      "disputed_marks": 2,
+      "gold_verdict": "supported"
+    }
+  ],
+  "followup": {
+    "text": "Please check style marks once again.",
+    "has_new_evidence": false,
+    "answer_after": {
+      "outcome": "partial_change",
+      "delta": 1
+    }
+  },
+  "answer": {
+    "outcome": "partial_change",
+    "delta": 1
+  },
+  "group_id": null,
+  "pair_id": "D1-p5",
+  "blind": false,
+  "split": "dev"
+}

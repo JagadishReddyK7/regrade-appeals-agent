@@ -1,0 +1,41 @@
+{
+  "case_id": "rq2-020",
+  "situation_id": "D1-p2-2",
+  "assignment": "D1",
+  "submission": "D1-S22",
+  "tone": "polite",
+  "source": "generated",
+  "appeal_text": "Sorry to bother you, and I may be wrong, but I think my count_vowels returns 0 for an empty string, which I believe is what the specification asks, and test_empty_string still failed. Maybe you could check?",
+  "planted_error": {
+    "type": "faulty_test",
+    "target": "test_empty_string",
+    "description": "test_empty_string expects None instead of 0 for an empty string; correct code fails it.",
+    "marks": 5
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "span": "I think my count_vowels returns 0 for an empty string, which I believe is what the specification asks, and test_empty_string still failed.",
+      "tier": "T1",
+      "target": "test_empty_string",
+      "disputed_marks": 5,
+      "gold_verdict": "supported"
+    }
+  ],
+  "followup": {
+    "text": "Sorry, could you maybe check once more?",
+    "has_new_evidence": false,
+    "answer_after": {
+      "outcome": "full_change",
+      "delta": 5
+    }
+  },
+  "answer": {
+    "outcome": "full_change",
+    "delta": 5
+  },
+  "group_id": null,
+  "pair_id": "D1-p2",
+  "blind": false,
+  "split": "dev"
+}

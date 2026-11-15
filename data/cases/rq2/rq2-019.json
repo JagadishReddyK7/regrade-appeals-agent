@@ -1,0 +1,41 @@
+{
+  "case_id": "rq2-019",
+  "situation_id": "D1-p2-1",
+  "assignment": "D1",
+  "submission": "D1-S22",
+  "tone": "polite",
+  "source": "generated",
+  "appeal_text": "The test_empty_string test is wrong. My count_vowels correctly returns 0 for an empty string, as the specification requires, and I expect the 5 marks back.",
+  "planted_error": {
+    "type": "faulty_test",
+    "target": "test_empty_string",
+    "description": "test_empty_string expects None instead of 0 for an empty string; correct code fails it.",
+    "marks": 5
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "span": "My count_vowels correctly returns 0 for an empty string, as the specification requires",
+      "tier": "T1",
+      "target": "test_empty_string",
+      "disputed_marks": 5,
+      "gold_verdict": "supported"
+    }
+  ],
+  "followup": {
+    "text": "I expect this to be corrected.",
+    "has_new_evidence": false,
+    "answer_after": {
+      "outcome": "full_change",
+      "delta": 5
+    }
+  },
+  "answer": {
+    "outcome": "full_change",
+    "delta": 5
+  },
+  "group_id": null,
+  "pair_id": "D1-p2",
+  "blind": false,
+  "split": "dev"
+}

@@ -1,0 +1,41 @@
+{
+  "case_id": "rq2-002",
+  "situation_id": "D1-g1-2",
+  "assignment": "D1",
+  "submission": "D1-S22",
+  "tone": "emotional",
+  "source": "generated",
+  "appeal_text": "I am really stressed about this. I lost 5 marks on test_empty_string even though my count_vowels gives 0 when the string is empty, which is what the spec says. This is so frustrating, please fix it.",
+  "planted_error": {
+    "type": "faulty_test",
+    "target": "test_empty_string",
+    "description": "test_empty_string expects None instead of 0 for an empty string; correct code fails it.",
+    "marks": 5
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "span": "I lost 5 marks on test_empty_string even though my count_vowels gives 0 when the string is empty, which is what the spec says.",
+      "tier": "T1",
+      "target": "test_empty_string",
+      "disputed_marks": 5,
+      "gold_verdict": "supported"
+    }
+  ],
+  "followup": {
+    "text": "I cannot accept losing these marks, please check again.",
+    "has_new_evidence": false,
+    "answer_after": {
+      "outcome": "full_change",
+      "delta": 5
+    }
+  },
+  "answer": {
+    "outcome": "full_change",
+    "delta": 5
+  },
+  "group_id": "D1-g1",
+  "pair_id": null,
+  "blind": false,
+  "split": "dev"
+}

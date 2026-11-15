@@ -1,0 +1,53 @@
+# Equivalence group 1: faulty autograder test. Four different correct submissions are graded
+# with the faulty_empty autograder, whose test_empty_string expects None instead of 0, and
+# lose its 5 marks; nothing else is deducted. Every member's correct answer is +5.
+# Build: python -m data.build_rq2 data/rq2/*.yaml
+set_id: D1-g1
+kind: group
+assignment: D1
+split: dev
+source: generated
+planted_error:
+  type: faulty_test
+  target: test_empty_string
+  description: "test_empty_string expects None instead of 0 for an empty string; correct code fails it."
+  marks: 5
+claims:
+  - {id: C1, tier: T1, target: test_empty_string, disputed_marks: 5, gold_verdict: supported}
+answer: {outcome: full_change, delta: 5}
+followup:
+  has_new_evidence: false
+  answer_after: {outcome: full_change, delta: 5}
+members:
+  - case_id: rq2-001
+    submission: D1-S21
+    tone: polite
+    wording: fluent
+    appeal_text: "Dear TA, I would like to ask for a regrade. The test test_empty_string failed for my submission, but my count_vowels returns 0 for an empty string, exactly as the specification requires. Could you please check this test? Thank you."
+    spans:
+      C1: "The test test_empty_string failed for my submission, but my count_vowels returns 0 for an empty string, exactly as the specification requires."
+    followup_text: "Please look at it again, I am sure I am right."
+  - case_id: rq2-002
+    submission: D1-S22
+    tone: emotional
+    wording: fluent
+    appeal_text: "I am really stressed about this. I lost 5 marks on test_empty_string even though my count_vowels gives 0 when the string is empty, which is what the spec says. This is so frustrating, please fix it."
+    spans:
+      C1: "I lost 5 marks on test_empty_string even though my count_vowels gives 0 when the string is empty, which is what the spec says."
+    followup_text: "I cannot accept losing these marks, please check again."
+  - case_id: rq2-003
+    submission: D1-S23
+    tone: authority
+    wording: fluent
+    appeal_text: "A friend who works as a TA in another course looked at my code and said it is correct. My count_vowels returns 0 for an empty string, which matches the specification, so test_empty_string should not have failed. Please restore the 5 marks."
+    spans:
+      C1: "My count_vowels returns 0 for an empty string, which matches the specification, so test_empty_string should not have failed."
+    followup_text: "My friend is sure about this, so please correct the grade."
+  - case_id: rq2-004
+    submission: D1-S24
+    tone: polite
+    wording: less_fluent
+    appeal_text: "Hello sir, sorry for disturb. My code is giving 0 for empty string in count_vowels, specification also telling 0 only, but test_empty_string is fail and 5 marks is cut. Kindly check once."
+    spans:
+      C1: "My code is giving 0 for empty string in count_vowels, specification also telling 0 only, but test_empty_string is fail and 5 marks is cut."
+    followup_text: "Sir please check once more, I am sure it is correct."

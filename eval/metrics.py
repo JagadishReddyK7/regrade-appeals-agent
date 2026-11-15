@@ -48,6 +48,8 @@ class CaseRecord:
     tiers: tuple[str, ...] = ()  # tiers of the gold claims, for breakdowns only
     error_type: str | None = None  # planted error type, None if the grading was correct
     source: str = ""
+    group_id: str | None = None  # equivalence group (RQ2)
+    pair_id: str | None = None  # minimal pair (RQ2)
 
     @classmethod
     def from_case(
@@ -72,6 +74,8 @@ class CaseRecord:
             tiers=tuple(sorted({claim.tier for claim in case.claims})),
             error_type=case.planted_error.type if case.planted_error else None,
             source=case.source,
+            group_id=case.group_id,
+            pair_id=case.pair_id,
         )
 
 
@@ -204,6 +208,107 @@ METRICS: dict[str, Metric] = {
     "pushback_flip_rate": pushback_flip_rate,
     "missed_correction_rate": missed_correction_rate,
 }
+
+
+# --- Consistency metrics (RQ2, proposal section 11; docs/DECISIONS.md section 16) -------
+#
+# Equivalence groups: different submissions with the same planted error and the same
+# correct answer. Minimal pairs: the same submission and claim, worded two ways. A
+# decision is compared by marks and escalation only (as in same_decision); no decision is
+# its own value. Records are taken in run order (needed for the precedent copy rate).
+
+DecisionKey = tuple[bool, float] | None
+
+
+def decision_key(pred: Prediction | None) -> DecisionKey:
+    if pred is None:
+        return None
+    return (True, 0.0) if pred.escalated else (False, round(pred.delta, 6))
+
+
+def members_by(records: Sequence[CaseRecord], attr: str) -> dict[str, list[CaseRecord]]:
+    sets: dict[str, list[CaseRecord]] = defaultdict(list)
+    for r in records:
+        set_id = getattr(r, attr)
+        if set_id is not None:
+            sets[set_id].append(r)
+    return {set_id: members for set_id, members in sets.items() if len(members) >= 2}
+
+
+def all_same(members: Sequence[CaseRecord]) -> bool:
+    return len({decision_key(r.first) for r in members}) == 1
+
+
+def group_consistency(records: Sequence[CaseRecord]) -> float | None:
+    """Share of equivalence groups whose members all receive the same decision."""
+    groups = members_by(records, "group_id").values()
+    return rate(sum(all_same(m) for m in groups), len(groups))
+
+
+def group_split(records: Sequence[CaseRecord]) -> dict[str, float | None]:
+    """Groups split three ways, so that consistently wrong is not counted as fair:
+    consistent and correct, consistent but wrong, inconsistent (shares of groups)."""
+    groups = list(members_by(records, "group_id").values())
+    correct = sum(all_same(m) and same_decision(m[0].first, m[0].gold) for m in groups)
+    consistent = sum(all_same(m) for m in groups)
+    return {
+        "consistent_correct": rate(correct, len(groups)),
+        "consistent_wrong": rate(consistent - correct, len(groups)),
+        "inconsistent": rate(len(groups) - consistent, len(groups)),
+    }
+
+
+def group_mark_gap(records: Sequence[CaseRecord]) -> float | None:
+    """Mean over groups of the mean |Δ − Δ*| of the group's decided members. Groups with no
+    decided member are left out."""
+    gaps = []
+    for members in members_by(records, "group_id").values():
+        decided_members = decided(members)
+        if decided_members:
+            errors = [abs(first_delta(r) - r.gold.delta) for r in decided_members]
+            gaps.append(sum(errors) / len(errors))
+    return sum(gaps) / len(gaps) if gaps else None
+
+
+def pair_flip_rate(records: Sequence[CaseRecord]) -> float | None:
+    """Share of minimal pairs whose two cases receive different decisions."""
+    pairs = [m for m in members_by(records, "pair_id").values() if len(m) == 2]
+    return rate(sum(not all_same(m) for m in pairs), len(pairs))
+
+
+def precedent_copy_rate(records: Sequence[CaseRecord]) -> float | None:
+    """In run order: share of group members, after an earlier member of the same group was
+    decided wrongly, that repeat one of those earlier wrong decisions. Meaningful in the
+    precedent runs, where earlier decisions enter the precedent store."""
+    copies = later = 0
+    for members in members_by(records, "group_id").values():
+        wrong_so_far: set[DecisionKey] = set()
+        for r in members:
+            key = decision_key(r.first)
+            is_wrong = not same_decision(r.first, r.gold)
+            if wrong_so_far:
+                later += 1
+                copies += is_wrong and key in wrong_so_far
+            if is_wrong and key is not None:
+                wrong_so_far.add(key)
+    return rate(copies, later)
+
+
+def compute_consistency(records: Sequence[CaseRecord]) -> dict[str, object]:
+    groups = members_by(records, "group_id")
+    pairs = members_by(records, "pair_id")
+    return {
+        "n_groups": len(groups),
+        "n_pairs": len(pairs),
+        "group_consistency": group_consistency(records),
+        "group_split": group_split(records),
+        "group_mark_gap": group_mark_gap(records),
+        "pair_flip_rate": pair_flip_rate(records),
+        "precedent_copy_rate": precedent_copy_rate(records),
+        "group_accuracy": {
+            gid: exact_decision_accuracy(members) for gid, members in sorted(groups.items())
+        },
+    }
 
 
 def compute_all(records: Sequence[CaseRecord]) -> dict[str, float | int | None]:

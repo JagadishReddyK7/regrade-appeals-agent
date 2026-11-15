@@ -1,0 +1,41 @@
+{
+  "case_id": "rq2-006",
+  "situation_id": "D1-g2-2",
+  "assignment": "D1",
+  "submission": "D1-S26",
+  "tone": "emotional",
+  "source": "generated",
+  "appeal_text": "Losing the approach marks really hurts my grade. My reverse_words is recursive, but recursion in reverse_words was allowed later, so taking away 3 marks for it feels so unfair. Please give them back.",
+  "planted_error": {
+    "type": "rubric_misapplied",
+    "target": "rubric:approach",
+    "description": "reverse_words uses recursion, which A2 (2026-09-12) allows; the superseded rule A1 was applied and 3 approach marks were taken.",
+    "marks": 3
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "span": "My reverse_words is recursive, but recursion in reverse_words was allowed later, so taking away 3 marks for it feels so unfair.",
+      "tier": "T2",
+      "target": "rubric:approach",
+      "disputed_marks": 3,
+      "gold_verdict": "supported"
+    }
+  ],
+  "followup": {
+    "text": "This really matters to me, please reconsider the approach marks.",
+    "has_new_evidence": false,
+    "answer_after": {
+      "outcome": "full_change",
+      "delta": 3
+    }
+  },
+  "answer": {
+    "outcome": "full_change",
+    "delta": 3
+  },
+  "group_id": "D1-g2",
+  "pair_id": null,
+  "blind": false,
+  "split": "dev"
+}

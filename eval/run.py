@@ -10,6 +10,7 @@ predictions.jsonl and metrics.json. Refuses the private test split unless
 
 import argparse
 import json
+import random
 import subprocess
 import sys
 import time
@@ -30,14 +31,18 @@ from baselines.base import System, SystemOutput
 from eval.cost import per_case_cost, summarise_cost
 from eval.metrics import (
     CaseRecord,
+    Prediction,
     by_group,
     compute_all,
     compute_breakdowns,
+    compute_consistency,
+    decision_key,
+    rate,
     wrongful_change_rate,
 )
 from eval.runlog import RunContext, RunLogger, config_hash, read_events
 from llm.client import Backend, LLMClient, backend_from_config
-from retrieval.precedents import PrecedentStore
+from retrieval.precedents import Precedent, PrecedentStore
 from sandbox.cache import ResultCache
 from sandbox.runner import SandboxRunner
 
@@ -245,19 +250,70 @@ def run_case(system: System, case: Case, logger: RunLogger) -> tuple[SystemOutpu
 
 
 def score(records: list[CaseRecord]) -> dict[str, Any]:
-    """The task, robustness and breakdown metrics of a run (also used by eval.rescore)."""
+    """The task, robustness, breakdown and consistency metrics of a run (also used by
+    eval.rescore). Records must be in run order (the precedent copy rate depends on it)."""
     return {
         "overall": compute_all(records),
         "wrongful_change_rate_by_tone": by_group(records, lambda r: r.tone, wrongful_change_rate),
         "breakdowns": compute_breakdowns(records),
+        "consistency": compute_consistency(records),
     }
+
+
+# --- RQ2 precedent runs (docs/DECISIONS.md section 16) ----------------------------------
+
+
+def ordered_cases(cases: list[Case], config: dict[str, Any]) -> list[Case]:
+    """The cases in folder order, or shuffled by `case_order_seed` (precedent runs)."""
+    seed = config.get("case_order_seed")
+    if seed is None:
+        return cases
+    shuffled = list(cases)
+    random.Random(int(seed)).shuffle(shuffled)
+    return shuffled
+
+
+def precedent_from(case: Case, output: SystemOutput) -> Precedent | None:
+    """The system's own final decision as a precedent, built only from what a course would
+    archive (the appeal and the decision), never from the answer key."""
+    decision = output.second if output.followup_run and output.second else output.first
+    if decision is None:
+        return None
+    return Precedent(
+        precedent_id=case.case_id,
+        assignment=case.assignment,
+        target="appeal",
+        issue=case.appeal_text,
+        outcome=decision.outcome,
+        delta=decision.delta,
+        rationale=decision.rationale,
+    )
+
+
+def planted_copy_rate(
+    cases: list[Case], records: list[CaseRecord], planted: list[Precedent]
+) -> float | None:
+    """Share of cases on a planted precedent's target (same assignment, a gold claim on that
+    target, a correct answer different from the precedent's) decided as the precedent."""
+    eligible = copies = 0
+    for case, record in zip(cases, records, strict=True):
+        targets = {claim.target for claim in case.claims}
+        for p in planted:
+            key = decision_key(Prediction(p.outcome, p.delta))
+            if p.assignment != case.assignment or p.target not in targets:
+                continue
+            if key == decision_key(record.gold):
+                continue
+            eligible += 1
+            copies += decision_key(record.first) == key
+    return rate(copies, eligible)
 
 
 def run_eval(
     config: dict[str, Any], backend: Backend | None = None, allow_test_split: bool = False
 ) -> Path:
     """Run the configured system on every case; return the run directory."""
-    cases = load_cases(Path(config["cases"]), allow_test_split)
+    cases = ordered_cases(load_cases(Path(config["cases"]), allow_test_split), config)
     chash = config_hash(config)
     run_id = f"{config['name']}-{time.strftime('%Y%m%d-%H%M%S')}-{chash[:6]}"
     run_dir = Path(config.get("output_dir", "runs")) / run_id
@@ -271,13 +327,17 @@ def run_eval(
     if backend is None and config["system"] != "b0":
         backend = backend_from_config(config["llm"])
     system = build_system(config, backend, Path(config.get("data_root", "data")), proposals)
+    store: PrecedentStore | None = getattr(system, "precedents", None)
+    planted = list(store.precedents) if store is not None else []
+    accumulate = bool((config.get("retrieval") or {}).get("accumulate_precedents", False))
     records = []
     errors = 0
     wall_s: dict[str, float] = {}
     with open(run_dir / "predictions.jsonl", "w", encoding="utf-8") as predictions:
         for case in cases:
             start = time.perf_counter()
-            output, error = run_case(system, case, events.for_case(case.case_id))
+            case_log = events.for_case(case.case_id)
+            output, error = run_case(system, case, case_log)
             wall_s[case.case_id] = time.perf_counter() - start
             errors += error is not None
             record = {**prediction_record(case, output), "error": error}
@@ -286,6 +346,11 @@ def run_eval(
             records.append(
                 CaseRecord.from_case(case, output.first, output.second, output.followup_run)
             )
+            if accumulate and store is not None:
+                precedent = precedent_from(case, output)
+                if precedent is not None:
+                    store.add(precedent)
+                    case_log.log("precedent_added", precedent=precedent.model_dump())
     metrics = {
         "run_id": run_id,
         "config_hash": chash,
@@ -294,6 +359,8 @@ def run_eval(
         **score(records),
         "cost": summarise_cost(per_case_cost(read_events(run_dir / "events.jsonl"), wall_s)),
     }
+    if planted:
+        metrics["consistency"]["planted_copy_rate"] = planted_copy_rate(cases, records, planted)
     (run_dir / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     return run_dir
 

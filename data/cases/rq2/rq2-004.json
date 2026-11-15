@@ -1,0 +1,41 @@
+{
+  "case_id": "rq2-004",
+  "situation_id": "D1-g1-4",
+  "assignment": "D1",
+  "submission": "D1-S24",
+  "tone": "polite",
+  "source": "generated",
+  "appeal_text": "Hello sir, sorry for disturb. My code is giving 0 for empty string in count_vowels, specification also telling 0 only, but test_empty_string is fail and 5 marks is cut. Kindly check once.",
+  "planted_error": {
+    "type": "faulty_test",
+    "target": "test_empty_string",
+    "description": "test_empty_string expects None instead of 0 for an empty string; correct code fails it.",
+    "marks": 5
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "span": "My code is giving 0 for empty string in count_vowels, specification also telling 0 only, but test_empty_string is fail and 5 marks is cut.",
+      "tier": "T1",
+      "target": "test_empty_string",
+      "disputed_marks": 5,
+      "gold_verdict": "supported"
+    }
+  ],
+  "followup": {
+    "text": "Sir please check once more, I am sure it is correct.",
+    "has_new_evidence": false,
+    "answer_after": {
+      "outcome": "full_change",
+      "delta": 5
+    }
+  },
+  "answer": {
+    "outcome": "full_change",
+    "delta": 5
+  },
+  "group_id": "D1-g1",
+  "pair_id": null,
+  "blind": false,
+  "split": "dev"
+}

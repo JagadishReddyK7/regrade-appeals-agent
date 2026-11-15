@@ -1,0 +1,35 @@
+# Minimal pair 5 (missed partial style credit, fluent vs less fluent English). Same submission
+# and claim as group 3; only the wording differs. Build: python -m data.build_rq2 data/rq2/*.yaml
+set_id: D1-p5
+kind: pair
+assignment: D1
+split: dev
+source: generated
+planted_error:
+  type: missed_partial_credit
+  target: "rubric:style"
+  description: "One of the two functions has a docstring; A3 gives 1 of the 2 style marks in that case, but 0 were awarded."
+  marks: 1
+claims:
+  - {id: C1, tier: T2, target: "rubric:style", disputed_marks: 2, gold_verdict: supported}
+answer: {outcome: partial_change, delta: 1}
+followup:
+  has_new_evidence: false
+  answer_after: {outcome: partial_change, delta: 1}
+members:
+  - case_id: rq2-025
+    submission: D1-S29
+    tone: polite
+    wording: fluent
+    appeal_text: "Hello, I received 0 of 2 style marks, although my count_vowels has a docstring. Could you please check whether I should get some style marks?"
+    spans:
+      C1: "I received 0 of 2 style marks, although my count_vowels has a docstring."
+    followup_text: "Could you please check the style marks again?"
+  - case_id: rq2-026
+    submission: D1-S29
+    tone: polite
+    wording: less_fluent
+    appeal_text: "Hello, I am getting 0 of 2 style marks, but count_vowels is having docstring. Please check if some style marks is coming for me."
+    spans:
+      C1: "I am getting 0 of 2 style marks, but count_vowels is having docstring."
+    followup_text: "Please check style marks once again."

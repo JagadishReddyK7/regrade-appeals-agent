@@ -559,3 +559,48 @@ unchanged as the whole-appeal tool agent (B3).
   but more wrongful refusals (0.53 vs 0.35, 0.38), with no difference significant after
   Holm except against B0. No difference in family 2 is significant. These are the
   reported results; nothing is changed or re-run after seeing them.
+
+## 16. RQ2: consistency cases and precedent runs (2026-11-16, after the submission)
+
+RQ2 was untested in the final report (no equivalence groups, minimal pairs or precedent
+runs). This study was added after the submission, for the evaluation on Nov 19, and is
+reported as post-submission work. Code and prompts stay frozen (section 13); only opt-in
+RQ2 settings are new, and every existing config behaves exactly as before.
+
+- **Cases on the dev assignment D1** (`data/cases/rq2/`, 32 cases, split `dev`): 4
+  equivalence groups of 4 new submissions (`D1-S21` to `D1-S36`; faulty test +5, recursion
+  allowed by A2 +3, missed partial style credit +1, real bug no change) and 8 minimal pairs
+  (same submission and claim, fluent vs less fluent or assertive vs hesitant). Group members
+  differ in code, tone and English fluency; within a group the planted error, claim and
+  correct answer are identical, and the planted error is the only deduction in dispute.
+  Built from set files (`data/rq2/*.yaml`) by `data/build_rq2.py`: each member is a single
+  case with its own `situation_id`, because the tone builder (`data/build_cases.py`) makes
+  four tones of one submission and a group needs different submissions. The validator and
+  `data/consistency.py` check the group and pair rules and the reference grader confirms
+  every planted error. **Caveats:** D1 is the assignment the prompts were designed on (the
+  appeals and submissions are new, the code is frozen); the cases were written with an LLM's
+  help and are not second-labelled.
+- **Consistency metrics added** (`eval/metrics.py`, with the team's explicit approval; no
+  existing definition changed), as in proposal section 11: group consistency (share of
+  groups whose members all get the same decision, compared by marks and escalation), the
+  three-way split (consistent and correct, consistent but wrong, inconsistent), the mean mark
+  gap within groups, the minimal-pair flip rate, and the precedent copy rate (in run order,
+  the share of group members after an earlier wrong decision in the group that repeat it).
+  They appear in every run's `metrics.json` under `consistency`.
+- **Precedent runs** (`configs/rq2_pipeline_precedents_s{1,2,3}.yaml`): the cases run in a
+  shuffled order (`case_order_seed`) and each final decision is added to the precedent store
+  (`retrieval.accumulate_precedents`). A precedent holds only what a course would archive:
+  the appeal text and the decision (outcome, mark change, rationale), never the answer key.
+  **Preload:** the evidence agent has `search_precedents`, but no prompt mentions
+  precedents, so it never called it; `retrieval.preload_precedents: 3` loads the top 3
+  precedents for the appeal as evidence (E3) before the agent starts, as the grade report
+  and submission are loaded. Default 0, which leaves the agent's prompt identical.
+- **Planted precedent** (`configs/rq2_pipeline_planted.yaml`, `data/rq2/planted_precedent.jsonl`):
+  order 1 with one wrong precedent in the store from the start (a failing
+  `test_empty_string` is "correctly deducted", no change). `planted_copy_rate` is the share
+  of cases on that target whose correct answer differs and which are decided as the
+  precedent.
+- **Runs** (`notebooks/rq2_runs.ipynb`): the full system without precedents, the three
+  precedent orders, the planted run, B3 and B1, with the follow-up turn off (RQ2 is about
+  first decisions). The configs equal their dev configs except name, case folder, follow-up
+  and the RQ2 settings (`tests/test_rq2.py`).

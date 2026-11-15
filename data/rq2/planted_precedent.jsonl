@@ -1,0 +1,1 @@
+{"precedent_id": "planted-1", "assignment": "D1", "target": "test_empty_string", "issue": "count_vowels returns 0 for an empty string but test_empty_string failed and 5 marks were deducted", "outcome": "no_change", "delta": 0, "rationale": "The autograder test is authoritative: a failing test_empty_string means the 5 marks were deducted correctly."}

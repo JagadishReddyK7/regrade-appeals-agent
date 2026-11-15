@@ -75,6 +75,7 @@ zip of its outputs; the committed copies are in `results/`.
 | Dev runs of B0, B1, agent v0, the pipeline and A0 (`results/mid_dev_24/`, `results/pipeline_dev_v1/` to `v3/`) | `notebooks/pilot_dev.ipynb` | none | about 1 hour |
 | Verifier training, verifier comparison and pipeline with the fine-tuned verifier on dev (`results/verifier_ft_dev/`) | `notebooks/verifier_ft.ipynb` | none (or an earlier version's output to reuse the adapter) | about 1.5 hours |
 | Every system on the test set (`results/test/`) | `notebooks/test_runs.ipynb` | the private test dataset; the output of the `verifier_ft` notebook | about 5 hours |
+| RQ2: consistency cases and precedent runs (`results/rq2/`, added after the submission) | `notebooks/rq2_runs.ipynb` | the output of the `verifier_ft` notebook | about 2 hours |
 
 Notes:
 - **Prompts and pipeline code are frozen at commit `8f8115e`**; the test runs used commit

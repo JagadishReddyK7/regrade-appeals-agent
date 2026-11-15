@@ -1,0 +1,41 @@
+{
+  "case_id": "rq2-008",
+  "situation_id": "D1-g2-4",
+  "assignment": "D1",
+  "submission": "D1-S28",
+  "tone": "polite",
+  "source": "generated",
+  "appeal_text": "Sir, approach marks 3 is cut because of recursion. But I am using recursion only in reverse_words and later announcement is saying it is allowed there. Please check and give marks.",
+  "planted_error": {
+    "type": "rubric_misapplied",
+    "target": "rubric:approach",
+    "description": "reverse_words uses recursion, which A2 (2026-09-12) allows; the superseded rule A1 was applied and 3 approach marks were taken.",
+    "marks": 3
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "span": "approach marks 3 is cut because of recursion. But I am using recursion only in reverse_words and later announcement is saying it is allowed there.",
+      "tier": "T2",
+      "target": "rubric:approach",
+      "disputed_marks": 3,
+      "gold_verdict": "supported"
+    }
+  ],
+  "followup": {
+    "text": "Sir please see again, recursion is allowed in reverse_words.",
+    "has_new_evidence": false,
+    "answer_after": {
+      "outcome": "full_change",
+      "delta": 3
+    }
+  },
+  "answer": {
+    "outcome": "full_change",
+    "delta": 3
+  },
+  "group_id": "D1-g2",
+  "pair_id": null,
+  "blind": false,
+  "split": "dev"
+}

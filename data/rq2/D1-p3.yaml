@@ -1,0 +1,35 @@
+# Minimal pair 3 (recursion allowed by A2, fluent vs less fluent English). Same submission and
+# claim as group 2; only the wording differs. Build: python -m data.build_rq2 data/rq2/*.yaml
+set_id: D1-p3
+kind: pair
+assignment: D1
+split: dev
+source: generated
+planted_error:
+  type: rubric_misapplied
+  target: "rubric:approach"
+  description: "reverse_words uses recursion, which A2 (2026-09-12) allows; the superseded rule A1 was applied and 3 approach marks were taken."
+  marks: 3
+claims:
+  - {id: C1, tier: T2, target: "rubric:approach", disputed_marks: 3, gold_verdict: supported}
+answer: {outcome: full_change, delta: 3}
+followup:
+  has_new_evidence: false
+  answer_after: {outcome: full_change, delta: 3}
+members:
+  - case_id: rq2-021
+    submission: D1-S25
+    tone: polite
+    wording: fluent
+    appeal_text: "Hello, my reverse_words uses recursion and I lost the 3 approach marks for it. I understand that recursion is now allowed in reverse_words. Could you please review this?"
+    spans:
+      C1: "my reverse_words uses recursion and I lost the 3 approach marks for it. I understand that recursion is now allowed in reverse_words."
+    followup_text: "Could you please review the approach marks again?"
+  - case_id: rq2-022
+    submission: D1-S25
+    tone: polite
+    wording: less_fluent
+    appeal_text: "Hello, my reverse_words is using recursion and 3 approach marks is cut for that. I am understanding recursion is allowed now in reverse_words. Please review this."
+    spans:
+      C1: "my reverse_words is using recursion and 3 approach marks is cut for that. I am understanding recursion is allowed now in reverse_words."
+    followup_text: "Please review approach marks once again."

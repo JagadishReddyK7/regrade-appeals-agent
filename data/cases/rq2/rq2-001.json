@@ -1,0 +1,41 @@
+{
+  "case_id": "rq2-001",
+  "situation_id": "D1-g1-1",
+  "assignment": "D1",
+  "submission": "D1-S21",
+  "tone": "polite",
+  "source": "generated",
+  "appeal_text": "Dear TA, I would like to ask for a regrade. The test test_empty_string failed for my submission, but my count_vowels returns 0 for an empty string, exactly as the specification requires. Could you please check this test? Thank you.",
+  "planted_error": {
+    "type": "faulty_test",
+    "target": "test_empty_string",
+    "description": "test_empty_string expects None instead of 0 for an empty string; correct code fails it.",
+    "marks": 5
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "span": "The test test_empty_string failed for my submission, but my count_vowels returns 0 for an empty string, exactly as the specification requires.",
+      "tier": "T1",
+      "target": "test_empty_string",
+      "disputed_marks": 5,
+      "gold_verdict": "supported"
+    }
+  ],
+  "followup": {
+    "text": "Please look at it again, I am sure I am right.",
+    "has_new_evidence": false,
+    "answer_after": {
+      "outcome": "full_change",
+      "delta": 5
+    }
+  },
+  "answer": {
+    "outcome": "full_change",
+    "delta": 5
+  },
+  "group_id": "D1-g1",
+  "pair_id": null,
+  "blind": false,
+  "split": "dev"
+}

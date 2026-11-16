@@ -211,6 +211,26 @@ def test_planted_copy_rate() -> None:
     assert planted_copy_rate(cases, records, planted) == 0.5
 
 
+def test_planted_follow_rate_counts_a_correct_precedent() -> None:
+    """A correct (helpful) precedent has no copies of a wrong decision; the follow rate
+    counts every case on its target, so it is the accuracy on those cases."""
+    cases = [load(RQ2, "rq2-001"), load(RQ2, "rq2-002"), load(RQ2, "rq2-013")]
+    helpful = [
+        Precedent(
+            precedent_id="H",
+            assignment="D1",
+            target="test_empty_string",
+            issue="empty string test",
+            outcome="full_change",
+            delta=5,
+            rationale="the test is wrong",
+        )
+    ]
+    records = [rec(FIVE, FIVE), rec(FIVE, NO), rec(NO, FIVE)]
+    assert planted_copy_rate(cases, records, helpful) is None  # no case where it is wrong
+    assert planted_copy_rate(cases, records, helpful, only_wrong=False) == 0.5
+
+
 # --- Precedent preload in the pipeline ----------------------------------------------------
 
 
@@ -302,6 +322,10 @@ RQ2_CONFIGS = {
     "rq2_pipeline_precedents_s2": "pipeline_ft_dev",
     "rq2_pipeline_precedents_s3": "pipeline_ft_dev",
     "rq2_pipeline_planted": "pipeline_ft_dev",
+    "rq2_pipeline_r2": "pipeline_ft_dev",
+    "rq2_pipeline_r3": "pipeline_ft_dev",
+    "rq2_pipeline_planted_recursion": "pipeline_ft_dev",
+    "rq2_pipeline_helpful": "pipeline_ft_dev",
 }
 RQ2_KEYS = {"name", "cases", "followup", "case_order_seed", "retrieval"}
 

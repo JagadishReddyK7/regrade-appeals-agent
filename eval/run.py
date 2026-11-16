@@ -291,10 +291,15 @@ def precedent_from(case: Case, output: SystemOutput) -> Precedent | None:
 
 
 def planted_copy_rate(
-    cases: list[Case], records: list[CaseRecord], planted: list[Precedent]
+    cases: list[Case],
+    records: list[CaseRecord],
+    planted: list[Precedent],
+    only_wrong: bool = True,
 ) -> float | None:
     """Share of cases on a planted precedent's target (same assignment, a gold claim on that
-    target, a correct answer different from the precedent's) decided as the precedent."""
+    target) decided as the precedent. With only_wrong (the copy rate), only cases whose
+    correct answer differs from the precedent count; without it (the follow rate, used for a
+    correct precedent), every case on the target counts."""
     eligible = copies = 0
     for case, record in zip(cases, records, strict=True):
         targets = {claim.target for claim in case.claims}
@@ -302,7 +307,7 @@ def planted_copy_rate(
             key = decision_key(Prediction(p.outcome, p.delta))
             if p.assignment != case.assignment or p.target not in targets:
                 continue
-            if key == decision_key(record.gold):
+            if only_wrong and key == decision_key(record.gold):
                 continue
             eligible += 1
             copies += decision_key(record.first) == key
@@ -360,7 +365,11 @@ def run_eval(
         "cost": summarise_cost(per_case_cost(read_events(run_dir / "events.jsonl"), wall_s)),
     }
     if planted:
-        metrics["consistency"]["planted_copy_rate"] = planted_copy_rate(cases, records, planted)
+        consistency = metrics["consistency"]
+        consistency["planted_copy_rate"] = planted_copy_rate(cases, records, planted)
+        consistency["planted_follow_rate"] = planted_copy_rate(
+            cases, records, planted, only_wrong=False
+        )
     (run_dir / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     return run_dir
 

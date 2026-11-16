@@ -1,0 +1,1 @@
+{"precedent_id": "planted-2", "assignment": "D1", "target": "rubric:approach", "issue": "reverse_words uses recursion and the 3 approach marks were deducted", "outcome": "no_change", "delta": 0, "rationale": "Recursion is not allowed in D1 (announcement A1), so the 3 approach marks were deducted correctly."}

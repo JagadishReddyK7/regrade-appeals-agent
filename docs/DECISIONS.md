@@ -592,7 +592,8 @@ RQ2 settings are new, and every existing config behaves exactly as before.
   (`retrieval.accumulate_precedents`). A precedent holds only what a course would archive:
   the appeal text and the decision (outcome, mark change, rationale), never the answer key.
   **Preload:** the evidence agent has `search_precedents`, but no prompt mentions
-  precedents, so it never called it; `retrieval.preload_precedents: 3` loads the top 3
+  precedents, so it rarely calls it (2 calls in 32 cases in `results/rq2/`);
+  `retrieval.preload_precedents: 3` loads the top 3
   precedents for the appeal as evidence (E3) before the agent starts, as the grade report
   and submission are loaded. Default 0, which leaves the agent's prompt identical.
 - **Planted precedent** (`configs/rq2_pipeline_planted.yaml`, `data/rq2/planted_precedent.jsonl`):
@@ -604,3 +605,22 @@ RQ2 settings are new, and every existing config behaves exactly as before.
   precedent orders, the planted run, B3 and B1, with the follow-up turn off (RQ2 is about
   first decisions). The configs equal their dev configs except name, case folder, follow-up
   and the RQ2 settings (`tests/test_rq2.py`).
+- **Outcome (2026-11-16, `results/rq2/README.md`):** all 7 runs finished, 0 crashed
+  cases, metrics reproduced by `eval.rescore`. Without precedents the full system was
+  consistent on 2 of 4 groups (B1 and B3: 0 of 4); pair flips 2 of 8 for all three.
+  Precedents raised group consistency to 0.75-1.00 but added consistently wrong groups:
+  the faulty-test error of the first case was retrieved and repeated by every later
+  member, and accuracy depended on the case order (0.47, 0.53, 0.72; 0.66 without).
+  The planted precedent was copied 8 of 8 times, but those cases were already wrong in
+  the same order without it, so its own effect is not measurable here.
+- **Second session (2026-11-17), to close the gaps of the first:** (1) two repeats of the
+  run without precedents (`rq2_pipeline_r2`, `_r3`, identical but for the name), because
+  vLLM at temperature 0 is not exactly reproducible and the spread across case orders
+  (0.47-0.72) could partly be noise; (2) a wrong precedent on a target the system got right
+  in every first-session run (`rq2_pipeline_planted_recursion`: "recursion is not allowed,
+  the deduction is correct" on `rubric:approach`), so that copying can show; (3) a correct
+  precedent on the faulty test (`rq2_pipeline_helpful`), to see whether a good precedent can
+  fix the system's weak spot. (2) and (3) use order 1, so they compare with
+  `rq2_pipeline_precedents_s1`. `planted_follow_rate` (new, `eval/run.py`) is the share of
+  all cases on the precedent's target decided as the precedent; for a correct precedent it
+  is the accuracy on those cases, where `planted_copy_rate` has no eligible case.

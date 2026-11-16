@@ -31,12 +31,20 @@ T4 x2, temperature 0. Details, statistics and caveats: `results/test/README.md`.
 | A4b prompted 7B verifier | 0.46 | 0.05 | 0.68 | 0.00 | 0.70 |
 | A6 no escalation | 0.41 | 0.21 | 0.53 | 0.00 | 0.55 |
 
+RQ2 (consistency, 32 public cases on the dev assignment D1, `results/rq2/README.md`): the
+full system decided 2-3 of 4 equivalence groups the same way for every member, B1 and B3
+none. With a store of its own past decisions it copies its mistakes and its accuracy
+depends on the order of the appeals (0.47-0.72, against 0.62-0.66 between identical runs);
+a wrong precedent where its evidence is clear was ignored (0 of 8), a correct one on its
+weakest case type was followed (8 of 8, accuracy 0.91).
+
 ## Start here
 
 | Document | What it is for |
 | --- | --- |
 | `docs/proposal.pdf` | the original specification |
 | `results/test/README.md` | the final test results, statistics and caveats |
+| `results/rq2/README.md` | RQ2: consistency and precedent results |
 | `docs/STATUS.md` | what is built and what is not |
 | `docs/DECISIONS.md` | every design decision and where the code differs from the proposal |
 | `docs/ARCHITECTURE.md` | how a case flows through the code, how to add a system, tool or metric |
@@ -75,7 +83,7 @@ zip of its outputs; the committed copies are in `results/`.
 | Dev runs of B0, B1, agent v0, the pipeline and A0 (`results/mid_dev_24/`, `results/pipeline_dev_v1/` to `v3/`) | `notebooks/pilot_dev.ipynb` | none | about 1 hour |
 | Verifier training, verifier comparison and pipeline with the fine-tuned verifier on dev (`results/verifier_ft_dev/`) | `notebooks/verifier_ft.ipynb` | none (or an earlier version's output to reuse the adapter) | about 1.5 hours |
 | Every system on the test set (`results/test/`) | `notebooks/test_runs.ipynb` | the private test dataset; the output of the `verifier_ft` notebook | about 5 hours |
-| RQ2: consistency cases and precedent runs (`results/rq2/`, added after the submission) | `notebooks/rq2_runs.ipynb` | the output of the `verifier_ft` notebook | about 2 hours |
+| RQ2: consistency cases and precedent runs (`results/rq2/`: 7 runs; `results/rq2_session2/`: repeats and planted precedents, set `RUNS` in the notebook) | `notebooks/rq2_runs.ipynb` | the output of the `verifier_ft` notebook | about 2 hours + 1 hour |
 
 Notes:
 - **Prompts and pipeline code are frozen at commit `8f8115e`**; the test runs used commit

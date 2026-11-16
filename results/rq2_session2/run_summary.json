@@ -1,0 +1,10 @@
+{
+  "done": [
+    "rq2_pipeline_r2",
+    "rq2_pipeline_r3",
+    "rq2_pipeline_planted_recursion",
+    "rq2_pipeline_helpful"
+  ],
+  "failed_or_skipped": [],
+  "verifier_merged_here": true
+}

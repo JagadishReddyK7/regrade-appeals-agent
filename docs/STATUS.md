@@ -1,6 +1,6 @@
 # Project status
 
-Last updated: 2026-11-15. Update this file when a milestone-level item
+Last updated: 2026-11-16. Update this file when a milestone-level item
 finishes or the plan changes; tasks and owners are tracked in GitHub Issues.
 
 ## Where we are
@@ -63,12 +63,15 @@ LLM judge, the test set and human labelling. The test-set scope is reduced in
 - Fixes from `results/mid_dev_24/`: arithmetic check in `get_grade_report`, follow-up errors
   keep the first decision (agent v0), B1 may cite `followup`, rejected proposals list valid
   item ids.
-- **RQ2 study added after the submission (Nov 16, `docs/DECISIONS.md` section 16):** 32
+- **RQ2 study (Nov 16, `docs/DECISIONS.md` section 16):** 32
   consistency cases on D1 (4 equivalence groups, 8 minimal pairs), consistency metrics,
   precedent runs in three orders and a planted wrong precedent; run with
   `notebooks/rq2_runs.ipynb`, results in `results/rq2/`: the full system is more
-  consistent than B1 and B3 on groups (2 of 4 vs 0 of 4); precedents add consistency
-  but copy errors, and accuracy depends on the order of the appeals.
+  consistent than B1 and B3 on groups (2-3 of 4 in three runs vs 0 of 4); with precedents
+  accuracy depends on the order of the appeals (0.47-0.72, against 0.62-0.66 between
+  identical runs). A second session (`results/rq2_session2/`) showed that precedents
+  decide mainly where the system is unsure: a wrong recursion precedent was ignored (0 of
+  8), a correct faulty-test precedent was followed (8 of 8, accuracy 0.91).
 - Test set: guide in `docs/TEST_SET_GUIDE.md`; built and frozen Nov 13 (2 assignments T1, T2,
   20 situations, 80 cases), private Kaggle dataset; second labelling by a team member with
   an LLM's help, outcome kappa 1.00, tier kappa 0.86.

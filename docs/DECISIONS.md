@@ -336,8 +336,8 @@ Runner behaviour:
   must share a word with the query. BM25Plus is used because BM25Okapi's scores collapse
   in a store of a few documents. `search_precedents` uses the store named by
   `retrieval: {precedents: <file.jsonl>}` in the config; without it the store is empty,
-  as in all runs so far. Filling it (team-written precedents, the agent's own decisions
-  for RQ2) is still to do.
+  as in the dev and test runs. The RQ2 runs fill it with the system's own decisions or
+  with planted precedents (section 16).
 - **BM25 only for now**; the embedding model from the proposal is a final-submission
   task (another dependency and a model download).
 - **Evidence bundle and verifier format** (`agent/schemas.py`, `verifier/format.py`): see
@@ -560,12 +560,11 @@ unchanged as the whole-appeal tool agent (B3).
   Holm except against B0. No difference in family 2 is significant. These are the
   reported results; nothing is changed or re-run after seeing them.
 
-## 16. RQ2: consistency cases and precedent runs (2026-11-16, after the submission)
+## 16. RQ2: consistency cases and precedent runs (2026-11-16)
 
-RQ2 was untested in the final report (no equivalence groups, minimal pairs or precedent
-runs). This study was added after the submission, for the evaluation on Nov 19, and is
-reported as post-submission work. Code and prompts stay frozen (section 13); only opt-in
-RQ2 settings are new, and every existing config behaves exactly as before.
+RQ2 needs equivalence groups, minimal pairs and precedent runs, which the test set does not
+have. Code and prompts stay frozen (section 13); only opt-in RQ2 settings are new, and every
+existing config behaves exactly as before.
 
 - **Cases on the dev assignment D1** (`data/cases/rq2/`, 32 cases, split `dev`): 4
   equivalence groups of 4 new submissions (`D1-S21` to `D1-S36`; faulty test +5, recursion
@@ -613,7 +612,7 @@ RQ2 settings are new, and every existing config behaves exactly as before.
   member, and accuracy depended on the case order (0.47, 0.53, 0.72; 0.66 without).
   The planted precedent was copied 8 of 8 times, but those cases were already wrong in
   the same order without it, so its own effect is not measurable here.
-- **Second session (2026-11-17), to close the gaps of the first:** (1) two repeats of the
+- **Second session (2026-11-16), to close the gaps of the first:** (1) two repeats of the
   run without precedents (`rq2_pipeline_r2`, `_r3`, identical but for the name), because
   vLLM at temperature 0 is not exactly reproducible and the spread across case orders
   (0.47-0.72) could partly be noise; (2) a wrong precedent on a target the system got right
@@ -624,3 +623,13 @@ RQ2 settings are new, and every existing config behaves exactly as before.
   `rq2_pipeline_precedents_s1`. `planted_follow_rate` (new, `eval/run.py`) is the share of
   all cases on the precedent's target decided as the precedent; for a correct precedent it
   is the accuracy on those cases, where `planted_copy_rate` has no eligible case.
+- **Second-session outcome (`results/rq2_session2/`, commit `9a9a911`):** all 4 runs
+  finished, 0 crashed cases, metrics reproduced by `eval.rescore`. The repeats differ from
+  the first run in 1-2 of 32 decisions (accuracy 0.66, 0.62, 0.66; group consistency 0.50,
+  0.75, 0.75), so the order effect with precedents (0.47-0.72) is real, but their gain in
+  group consistency is mostly within noise. The wrong recursion precedent was retrieved in
+  5 of the 8 recursion cases and copied in none (copy rate 0.00, all 32 decisions as in
+  order 1). The correct faulty-test precedent was followed in 8 of 8 cases (0 of 8 correct
+  in order 1), accuracy 0.91. Reading: precedents decide mainly where the system's own
+  evidence is weak, so a store of TA-checked decisions helps and a store of its own
+  decisions spreads its errors. Details: `results/rq2/README.md`.

@@ -1,0 +1,13 @@
+{
+  "done": [
+    "rq2_pipeline",
+    "rq2_pipeline_precedents_s1",
+    "rq2_pipeline_precedents_s2",
+    "rq2_pipeline_precedents_s3",
+    "rq2_pipeline_planted",
+    "rq2_agent",
+    "rq2_b1"
+  ],
+  "failed_or_skipped": [],
+  "verifier_merged_here": true
+}

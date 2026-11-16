@@ -66,7 +66,9 @@ LLM judge, the test set and human labelling. The test-set scope is reduced in
 - **RQ2 study added after the submission (Nov 16, `docs/DECISIONS.md` section 16):** 32
   consistency cases on D1 (4 equivalence groups, 8 minimal pairs), consistency metrics,
   precedent runs in three orders and a planted wrong precedent; run with
-  `notebooks/rq2_runs.ipynb`, results to `results/rq2/`.
+  `notebooks/rq2_runs.ipynb`, results in `results/rq2/`: the full system is more
+  consistent than B1 and B3 on groups (2 of 4 vs 0 of 4); precedents add consistency
+  but copy errors, and accuracy depends on the order of the appeals.
 - Test set: guide in `docs/TEST_SET_GUIDE.md`; built and frozen Nov 13 (2 assignments T1, T2,
   20 situations, 80 cases), private Kaggle dataset; second labelling by a team member with
   an LLM's help, outcome kappa 1.00, tier kappa 0.86.
